@@ -33,7 +33,7 @@ CHANGELOG :
 - 7.0.0 -> BashKaraoke is housed in GitHub
 - 6.0.0 -> backend is modularized: Timidity becomes one of many possible backends, database changed, *OUT (-i option) updates database rows
 - 5.9.9 -> *OUT uses play() function in *CORE (no more redundancy), little improvements
-- 5.0.0 -> fullscreen ("GTK mode") added !!!!
+- 5.0.0 -> GTK mode added, but still in development
 - 4.2.3 -> BUC mode .rc tabs'bug fixed, *COMMON window mode selection bug fixed, option -i in *OUT modified to fix BSD system pipe handling issue (pipe remains freeze) -fixed-
 - 4.2.2 -> BUC mode little bug fixing
 - 4.2.1 -> "auto binary not found" bug fixed, bk_SMALL.xpm correct, *-INSTALL-UPGRADE little changes
@@ -220,7 +220,7 @@ CHANGELOG :
 - 7.0.0 -> BashKaraoke è ospitato in GitHub
 - 6.0.0 -> il backend e' modularizzato: Timidity diventa uno dei tanti backends possibili, il database e' cambiato, *OUT (opzione -i) aggiorna le righe del database 
 - 5.9.9 -> *OUT usa la funzione play() nel *CORE (non c'e' piu' ridondanza), piccoli miglioramenti
-- 5.0.0 -> aggiunto il fullscreen ("modo GTK") !!!!
+- 5.0.0 -> aggiunto il modo GTK, ma è ancora in sviluppo
 - 4.2.3 -> risolto il bug della tabulazione nel file .rc nel modo BUC, risolto il bug della selezione del modo in *COMMON (presente solo quando la lingua era "Inglese"), opzione -i nel file *OUT modificata per risolvere il problema del sistema BSD nella gestione delle pipes (la pipe rimane bloccata) -risolto-
 - 4.2.2 -> piccolo bug fixing nel modo BUC
 - 4.2.1 -> risolto bug "auto binary not found", bk_SMALL.xpm corretta, *-INSTALL-UPGRADE piccole modifiche
