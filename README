@@ -130,8 +130,7 @@ Cool, isn't it? ;-)
 
 BUGS :
 Four limitations/bugs:
-1) no way to play karaoke mp3s: file support is timidity file support ( see its man page )... you would use
-   pykararoke for this kind of karaoke files ;
+1) no way to play karaoke mp3s: we need a backend player... you would use pykararoke for this kind of karaoke files ;
 2) sometimes 1 next character after a "sung" phrase is improprerly highlighted (if char is not english) ;
 3) in "dialog" mode, midi database searching and "levels" window don't work ;
 4) in "BUC" mode, midi database search is not automatically played : you have to manually copy it in "PLAY this file -->5) in "BUC" mode, midi database search result is not automatically played : you have to manually copy it in "PLAY this file -->" text input field then select player ;
@@ -316,8 +315,7 @@ Figo, no? ;-)
 
 BUGS :
 Quattro limiti/bugs:
-1) non e' possibile suonare gli mp3 karaoke: il supporto file e' il supporto file di timidity ( vedi la sua pagina di manuale )... 
-   dovresti usare pykararoke per quel tipo di file karaoke ;
+1) non e' possibile suonare gli mp3 karaoke: abbiamo bisogno di un player di backend... puoi usare pykararoke per quel tipo di file karaoke ;
 2) a volte 1 carattere successivo ad una frase "cantata" (se il carattere e' internazionale) e' impropriamente colorato ;
 3) nel modo "dialog", la ricerca nel database dei midi e la finestra "livelli" non funzionano ; 
 4) nel modo "BUC", il risultato della ricerca nel database dei midi non e' suonato automaticamente: bisogna copiarlo manualmente nel campo di input testuale "SUONA questo file -->" e poi selezionare il player ;
