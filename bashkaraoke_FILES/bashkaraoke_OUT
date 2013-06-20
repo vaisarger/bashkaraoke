@@ -74,7 +74,7 @@ uso()
 		echo -e "\t" 1>&2
 		echo -e "\tDove per <OPZIONI> si intende:" 1>&2
 		echo -e "\t-o\t\t=>\te' \"modalita' di Output\":" 1>&2
-		echo -e "\t\t\t\t\t( \"c\" => \"colore\" oppure \"s\" => \"stringa\" oppure \"n\" => \"numerico\", default = \"c\" )" 1>&2
+		echo -e "\t\t\t\t\t( \"c\" => \"colore\" oppure \"s\" => \"stringa\" oppure \"n\" => \"numerico\" oppure \"h\" => \"html\", default = \"c\" )" 1>&2
 		echo -e "\t" 1>&2
 		echo -e "\t-f\t\t=>\te' \"file di output\":" 1>&2
 		echo -e "\t\t\t\t\t( default = \"${dir_Karaoke}/.lyrics\" )" 1>&2
@@ -106,7 +106,7 @@ uso()
 		echo -e "\t" 1>&2
 		echo -e "\tWhere <OPTIONS> are:" 1>&2
 		echo -e "\t-o\t\t=>\tis \"Output mode\":" 1>&2
-		echo -e "\t\t\t\t\t( \"c\" => \"color\" or \"s\" => \"string\" or \"n\" => \"numeric\", default = \"c\" )" 1>&2
+		echo -e "\t\t\t\t\t( \"c\" => \"color\" or \"s\" => \"string\" or \"n\" => \"numeric\" or \"h\" => \"html\", default = \"c\" )" 1>&2
 		echo -e "\t" 1>&2
 		echo -e "\t-f\t\t=>\tis \"output file name\":" 1>&2
 		echo -e "\t\t\t\t\t( default = \"${dir_Karaoke}/.lyrics\" )" 1>&2
@@ -537,6 +537,48 @@ elif [ "${output_mode}" = "n" ]
 	export foreground_2_bis="{2}"
 	#export foreground_2_bis="S2S"
 	#
+elif [ "${output_mode}" = "h" ]
+	then
+	#
+	export intestazione_HTML='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+	        <title>BashKaraoke HTML window</title>
+        
+        	<!-- Sezione Script ---------------------------- -->
+		<script src="js/jquery.min.js"></script>   
+		<script src="js/jquery.textfill.min.js"></script>   
+		<script src="js/config.js"></script>
+		<!-- ------------------------------------------------ -->
+        
+		<!-- Sezione CSS ------------------------------- -->
+		<style type="text/css" title="currentStyle">
+		@import "css/css_karaoke.css";
+		</style>
+		<!-- ------------------------------------------------ -->
+		
+		<!-- Sezione refresh della pagina in secondi o 0.0 meno... -->
+		<!-- <meta http-equiv="refresh" content="2"/> -->
+		<meta http-equiv="refresh" content="0.3"/> 
+		<!-- refresh della pagina in secondi o 0.0 meno... -->
+	</head>
+	<body>
+		<div class="textBox" >
+			<span>'
+	#
+	export foreground_1="fg_1"
+	export fg_1="				<font class=\"color_sing\">"
+	export foreground_1_bis="</font>"
+	#
+	export foreground_2="fg_2"
+	export fg_2="				<font class=\"color_next\">"
+	export foreground_2_bis="</font><br>"
+	#
+	export coda_HTML='			</span>
+		</div>
+	</body>
+</html>'
+	#
 fi
 : font_family_string
 : foreground_1
@@ -643,6 +685,7 @@ EOTitle
 #################################################################################################
 #
 # PlAYING...
+#bash -x "${bkcore}" "${midi}" 
 "${bkcore}" "${midi}" 
 #
 #################################################################################################
