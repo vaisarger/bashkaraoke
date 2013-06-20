@@ -1,0 +1,5470 @@
+#!/usr/bin/env bash
+#
+#########################
+#
+# Copyright (C) 2012 Vittorio Cagnetta
+# Copyright (C) 2012 Davide Depau
+#
+# Author: Vittorio Cagnetta <vaisarger@gmail.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program, 
+# called, in this distribution, "bashkaraoke-LICENSE"; if not, write to the 
+# Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+#########################
+#
+# Let's start...
+#easybashgui_path="/usr/local/bin/easybashgui" #Set it if your system doesn't know where is EasyBashGUI...
+#
+##
+#
+export dir_Karaoke="${HOME}/.bashkaraoke"
+if [ ! -d "${dir_Karaoke}" ]
+	then
+	if [ -d "${HOME}/.bash!karaoke" ]
+		then
+		mv -f "${HOME}/.bash!karaoke" "${dir_Karaoke}"
+	else
+		mkdir "${dir_Karaoke}" && chmod 777 "${dir_Karaoke}"
+	fi
+fi
+#
+export log_file=".bashkaraoke.log"
+export timidity_log_file=".timidity.log"
+export version_file=".version"
+export pid_file=".pid"
+#
+rc_file=".bashkaraoke.rc"
+if [ -f "${dir_Karaoke}/.bash!karaoke.rc" ]
+	then
+	mv "${dir_Karaoke}/.bash!karaoke.rc" "${dir_Karaoke}/${rc_file}"
+fi
+if [ -f "${dir_Karaoke}/${rc_file}" ]
+	then
+	if [ $(wc -c 0< "${dir_Karaoke}/${rc_file}" ) -gt 0 ]
+		then
+		crea_rc_file="NO"
+	else
+		crea_rc_file="SI"
+	fi
+else
+	crea_rc_file="SI"
+fi
+# =>
+[ -f "${dir_Karaoke}/${rc_file}" ] && \
+source "${dir_Karaoke}/${rc_file}"
+#
+##
+#
+source easybashgui
+# easybashgui redundant check:
+if [ ${#LIB_NAME} -eq 0 -o ${#LIB_VERSION} -eq 0 -o ${#LIB_URL} -eq 0 -o ${#LIB_AUTHOR} -eq 0 ]
+	then
+	if [ -f "${easybashgui_path}" ]
+		then
+		source "${easybashgui_path}"
+	fi
+fi
+if [ ${#LIB_NAME} -eq 0 -o ${#LIB_VERSION} -eq 0 -o ${#LIB_URL} -eq 0 -o ${#LIB_AUTHOR} -eq 0 ]
+	then
+	echo -e "\n\nErr.: EasyBashGUI sourcing failed !\n\n"
+	xterm -e "echo EasyBashGUI_sourcing_failed ; sleep 3"
+	exit 1
+fi
+#
+####################################
+# Sezione iniziale: linguaggio...
+lang="$(set | gsed -n s\#'LANG=\(.*\)'#'\1'#p )"
+if [ ${#lang} -gt 0 ]
+	then
+	l="$(if [ $(echo -n "${lang}" | grep -i "it" | wc -c ) -gt 0 ]
+			then
+			echo "IT"
+		else
+			echo "EN"
+		fi )"
+else
+	l="EN"
+fi
+export l
+#
+: l
+#
+####################################
+#
+BK_VERSION_NUMBER="6.0.0_BETA6"
+#
+: version_file
+echo "${BK_VERSION_NUMBER}" 1> "${dir_Karaoke}/${version_file}"
+#
+##
+#
+export MIN_LIB_VERSION_REQUIRED="4.0.3" # This is related to *EasyBashGUI* version...
+# 
+[ ${#LIB_URL} -eq 0 ] && export LIB_URL="http://sites.google.com/site/easybashgui"
+#
+####################################
+#
+##
+#
+gtkrc_file=".bashkaraoke_gtkrc" # This is used by Xdialog
+if [ -f "${dir_Karaoke}/${gtkrc_file}" ]
+	then
+	crea_gtkrc_file="NO"
+else
+	crea_gtkrc_file="SI"
+fi
+#
+##
+#
+lista_karaoke="karaoke_list.txt"
+#
+##
+#
+database="${dir_Karaoke}/database.txt"
+#
+##
+#
+timidity_extensions_var=".mid .rmi .rcp .r36 .g18 .g36 .mfi .kar .mod .wrd"
+OTHER_karaoke_type_extensions_var=""
+OTHER_AGAIN_karaoke_type_extensions_var=""
+# ...
+# ...
+# =>
+export extensions_var="${timidity_extensions_var} ${OTHER_karaoke_type_extensions_var} ${OTHER_AGAIN_karaoke_type_extensions_var}" 
+#
+##
+#
+default_background="white"
+default_foreground_1="red"
+default_foreground_2="black"
+#
+##
+#
+default_font_family="Ubuntu 50"
+#
+##
+#
+min_Volume="0"
+default_Volume="100"
+max_Volume="800"
+#
+min_Pitch="-24"
+default_Pitch="0"
+max_Pitch="24"
+#
+min_Tempo="10"
+default_Tempo="100"
+max_Tempo="400"
+#
+##
+#
+bashkaraoke_gtk="NO"
+bk_gtk_binary="bashkaraoke-gtk"
+esistenza_bashkaraoke_gtk="$(type "${bk_gtk_binary}" 2> /dev/null )"
+if [ ${#esistenza_bashkaraoke_gtk} -gt 0 ]
+	then
+	bashkaraoke_gtk="SI"
+fi #if [ ${#esistenza_bashkaraoke_gtk} -gt 0 ]
+#
+##
+#
+gtkdialog="NO"
+esistenza_gtkdialog="$(type "gtkdialog" 2> /dev/null )"
+if [ ${#esistenza_gtkdialog} -gt 0 ]
+	then
+	vers_gtkdialog="$(gtkdialog --version | cut -d ' ' -f 3 )"
+	if [ $(echo -n "${vers_gtkdialog}" | tr -dc '[[:digit:]]' | wc -c ) -gt 0 ]
+		then
+		vers_gtkdialog_primo_campo=$(echo "${vers_gtkdialog}" | cut -d '.' -f 1 )
+		vers_gtkdialog_secondo_campo=$(echo "${vers_gtkdialog}" | cut -d '.' -f 2 )
+		vers_gtkdialog_terzo_campo=$(echo "${vers_gtkdialog}" | cut -d '.' -f 3 )
+		# versione minima => 0.7.20 ...
+		if [ ${vers_gtkdialog_primo_campo} -ge 0 -a ${vers_gtkdialog_secondo_campo} -ge 7 -a ${vers_gtkdialog_terzo_campo} -ge 20 ]
+			then
+			#
+			gtkdialog="SI"
+			#
+		fi #if [ ${vers_gtkdialog_primo_campo} -ge 0 -a ${vers_gtkdialog_secondo_campo} -ge 7 -a ${vers_gtkdialog_terzo_campo} -ge 20 ]
+		#
+	fi #if [ $(echo -n "${vers_gtkdialog}" | tr -dc '[[:digit:]]' | wc -c) -gt 0 ]
+	#
+fi #if [ ${#esistenza_gtkdialog} -gt 0 ]
+#
+##
+#
+if [ "${gtkdialog}" = "SI" ]
+	then
+	default_mode="gtkdialog"
+elif [ "${gtkdialog}" = "NO" ]
+	then
+	default_mode="auto"
+	#
+	esistenza_Xdialog="$(type "Xdialog" 2> /dev/null )"
+	if [ ${#esistenza_Xdialog} -gt 0 ]
+		then
+		Xdialog_presente_e_funzionante="$(Xdialog --version 2>&1 )"
+		if [ $(echo -n "${Xdialog_presente_e_funzionante}" | grep "Do you run under X11 with GTK.*installed ?" | wc -c ) -eq 0 ]
+			then
+			default_mode="Xdialog"
+			#
+		fi
+		#
+	fi
+	#
+fi
+#
+##
+#
+#default_font="-b&h-luxi sans-bold-r-normal-*-*-400-*-*-p-*-iso8859-1"
+if [ "${mascotte}" = "Beastie" ]
+	then
+	default_font="-b&h-lucidatypewriter-medium-r-normal-sans-70-*-*-*-*-*-iso8859-1"
+elif [ "${mascotte}" = "Tux" ]
+	then
+	default_font="-misc-fixed-medium-r-normal--100-*-*-*-*-*-iso8859-1"
+fi
+#
+##
+#
+default_soundfont="$(if [ -f "/usr/local/share/timidity/PC51f.sf2" ]
+				then
+				echo -n "/usr/local/share/timidity/PC51f.sf2"
+			else
+				:
+			fi )"
+#
+##
+#
+default_columns="24"
+default_width="500"
+default_height="500"
+#
+##
+#
+##################################
+#
+##
+#
+width="${default_width}"
+height="${default_height}"
+if [ "${mode}" = "kdialog" ]
+	then
+	if [ ${#x_root} -gt 0 -a ${#y_root} -gt 0 ]
+		then
+		x="+$(( $(( ${x_root} / 2 )) - $(( ${width} / 2 )) ))"
+		y="+$(( $(( ${y_root} / 2 )) - $(( ${height} / 2 )) ))"
+	fi
+	dimensione_finestra="--geometry=${width}x${height}${x}${y}"
+	dimensione_finestra_1="--geometry=${width}x${height}${x}${y}"
+	dialogo="kdialog ${dimensione_finestra}"
+elif [ "${mode}" = "zenity" ]
+	then
+	dimensione_finestra="--width=${width} --height=${height}"
+	dimensione_finestra_1="--width=${width} --height=${height}"
+elif [ "${mode}" = "Xdialog" ]
+	then
+	dimensione_finestra="${width}x${height}"
+	dimensione_finestra_1="${width}x${height}"
+fi
+#
+##
+#
+export big_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_BIG.xpm"
+export small_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_SMALL.xpm"
+export buc_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_BUC.xpm"
+export gsw_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_GSW.xpm"
+export window_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_icon.png"
+export black_icon="$(pwd)/bashkaraoke_FILES/black.png"
+export red_icon="$(pwd)/bashkaraoke_FILES/red.png"
+export green_icon="$(pwd)/bashkaraoke_FILES/green.png"
+export yellow_icon="$(pwd)/bashkaraoke_FILES/yellow.png"
+export blue_icon="$(pwd)/bashkaraoke_FILES/blue.png"
+export magenta_icon="$(pwd)/bashkaraoke_FILES/magenta.png"
+export cyan_icon="$(pwd)/bashkaraoke_FILES/cyan.png"
+export white_icon="$(pwd)/bashkaraoke_FILES/white.png"
+export gsw_sing_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_icon.png"
+#
+##
+#
+if [ "${mode}" = "gtkdialog" ]
+	then
+	:
+	#
+elif [ "${mode}" = "kdialog" ]
+	then
+	kdialog()
+		{
+		num_param=${#}
+		IFS=$'\t'
+		exec	kdialog	--icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+									do
+									echo -en "${1}\t"
+									shift
+								done )
+		#
+		}
+	#
+elif [ "${mode}" = "zenity" ]
+	then
+	:
+	zenity()
+		{
+		num_param=${#}
+		IFS=$'\t'
+		exec	zenity	--window-icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+										do
+										echo -en "${1}\t"
+										shift
+									done )
+		#
+		}
+	#
+elif [ "${mode}" = "Xdialog" ]
+	then
+	Xdialog()
+		{
+		num_param=${#}
+		if [ "${FUNCT_NAME}" = "menu" ]
+			then
+			#
+			IFS=$'\t'
+			exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+										do
+										[[ ${1} = Select* ]] && echo -en " \t" && shift && continue
+										#
+										echo -en "${1}\t"
+										shift
+									done )
+			#
+		elif [ "${FUNCT_NAME}" = "input" ]
+			then
+			#
+			IFS=$'\t'
+			exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+										do
+										[[ ${1} = Please* ]] && echo -en " \t" && shift && continue
+										#
+										echo -en "${1}\t"
+										shift
+									done )
+			#
+		elif [ "${FUNCT_NAME}" = "list" ]
+			then
+			#
+			IFS=$'\t'
+			exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+										do
+										[[ ${1} = Select* ]] && echo -en " \t" && shift && continue
+										[[ ${1} = --icon ]] && shift && continue
+										[[ ${1} = *.xpm ]] && shift && continue
+										#
+										echo -en "${1}\t"
+										shift
+									done )
+		else
+			#
+			IFS=$'\t'
+			exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+										do
+										[[ ${1} = --icon ]] && shift && continue
+										[[ ${1} = *.xpm ]] && shift && continue
+										#
+										echo -en "${1}\t"
+										shift
+									done )
+			#
+		fi
+		}
+	#
+fi
+#
+##
+#
+: # arrotonda()
+percentualizza()
+	{
+	start_value_percent=0
+	end_value_percent=100
+	#
+	start_value="${1}"
+	init_value="${2}"
+	end_value="${3}"
+	#
+	num_tot_elementi=$(( ${end_value} - ${start_value} ))
+	diff_values_percent=$(( ${end_value_percent} - ${start_value_percent} ))
+	step=$(echo "scale=2; ${num_tot_elementi} / ${diff_values_percent}" | bc -l )
+	# =>
+	init_value_percent_float=$(echo "scale=2; $(( ${init_value} - ${start_value} )) / ${step}" | bc -l )
+	init_value_percent=$(arrotonda "${init_value_percent_float}" )
+	#
+	echo "${start_value_percent} ${init_value_percent} ${end_value_percent}"
+	}
+#
+##
+#
+###############################################
+###############################################
+#
+##
+#
+####################################
+# Sezione "dipendenze"...
+#
+# 1) bash vers. >= 3.X.X :
+if [ $(echo -n "${BASH_VERSION}" | tr -dc '[[:digit:]]' | wc -c ) -eq 0 ]
+	then
+	[ "${l}" = "IT" ] && alert_message "Errore: \n non ho potuto \n determinare \n la versione di bash..."
+	[ "${l}" = "EN" ] && alert_message "Error: \n I couldn't \n get bash version..."
+	clean_temp
+	exit 1
+else
+	# Ok, ${BASH_VERSION} exists and is correct...
+	if [ $(echo "${BASH_VERSION}" | cut -d '.' -f 1) -lt 3 ]
+		then
+		[ "${l}" = "IT" ] && alert_message "Sembra\nche hai\nuna versione\ndi\"bash\"\nnel tuo sistema\ninferiore\nalla 3.X.X\n...\n\n\n\n\nPer favore,\ninstalla\nuna versione\nrecente\ndi bash\nprima\ndi lanciare\nil programma"
+		[ "${l}" = "EN" ] && alert_message "It seems\nyou have\na \"bash\"\nversion\nin your system\nprior\nto 3.X.X\n...\n\n\n\n\nPlease,\ninstall\na recent\nbash\nversion\nfirst"
+		clean_temp
+		exit 1
+	fi
+fi
+# 2) gsed :
+if [ $(echo -n "$(type "gsed" 2>/dev/null)" | wc -c) -eq 0 ]
+	then
+	[ "${l}" = "IT" ] && alert_message "Sembra\nche non hai\n\"gsed\"\n( = GNU sed )\nnel tuo sistema\noppure\nil binario \"gsed\" \nnon si trova\nnel path\n...\n\n\nX l'utente FreeBSD:\nper favore,\ninstalla il port\n\"gsed\" prima..."
+	[ "${l}" = "EN" ] && alert_message "It seems\nyou don't have\n\"gsed\"\n( = GNU sed )\nin your system\nor\n\"gsed\" binary\nisn't in your path\n...\n\n\n@ FreeBSD user:\nplease,\ninstall \"gsed\"\nport first..."
+	clean_temp
+	exit 1
+fi
+# 3) xterm :
+if [ $(echo -n "$(type "xterm" 2>/dev/null)" | wc -c) -eq 0 ]
+	then
+	[ "${l}" = "IT" ] && alert_message "Sembra\nche non hai\n\"xterm\"\nnel tuo sistema\noppure\nil binario \"xterm\" \nnon si trova\nnel path\n...\n\n$(basename "${0}" )\ne' testato\nsolo\ncon quel tipo\ndi terminale\n...\n\n\nPer favore,\ninstallalo prima\ndi lanciare\nil programma."
+	[ "${l}" = "EN" ] && alert_message "It seems\nyou don't have\n\"xterm\"\nin your system\nor\n\"xterm\" binary\nisn't in your path\n...\n\n$(basename "${0}" )\nis tested\nonly\nwith that\nterminal\n type...\n\n\nPlease,\ninstall it first."
+	clean_temp
+	exit 1
+fi
+# 4) timidity :
+if [ $(echo -n "$(type "timidity" 2>/dev/null)" | wc -c) -eq 0 ]
+	then
+	[ "${l}" = "IT" ] && alert_message "Sembra\nche non hai\n\"timidity\"\nnel tuo sistema\noppure\nil binario \"timidity\" \nnon si trova\nnel path\n...\n\n$(basename "${0}" )\ne' niente\nsenza di esso... :-)\n\n\nPer favore,\ninstallalo prima\ndi lanciare\nil programma."
+	[ "${l}" = "EN" ] && alert_message "It seems\nyou don't have\n\"timidity\"\nin your system\nor\n\"timidity\" binary\nisn't in your path\n...\n\n$(basename "${0}" )\nis nothing\nwithout it... :-)\n\n\nPlease,\ninstall it first."
+	clean_temp
+	exit 1
+fi
+# 5) mktemp :
+if [ $(echo -n "$(type "mktemp" 2>/dev/null)" | wc -c) -eq 0 ]
+	then
+	[ "${l}" = "IT" ] && alert_message "Sembra\nche non hai\n\"mktemp\"\nnel tuo sistema\noppure\nil binario \"mktemp\"\nnon si trova\nnnel path\n...\n\nNe ho bisogno\nper gestire\ni files\ntemporanei\nin modo sicuro...\n;-)\n\n\nPer favore,\ninstallalo prima\ndi lanciare\nil programma."
+	[ "${l}" = "EN" ] && alert_message "It seems\nyou don't have\n\"mktemp\"\nin your system\nor\n\"mktemp\" binary\nisn't in your path\n...\n\nI need it\nto handle temp files\nin a secure way...\n;-)\n\n\nPlease,\ninstall it first."
+	clean_temp
+	exit 1
+fi
+# 6) easybashgui :
+if [ $(echo -n "$(type "easybashgui" 2>/dev/null)" | wc -c) -eq 0 ]
+	then
+	[ "${l}" = "IT" ] && echo -e "Sembra che non hai \"easybashgui\" nel tuo sistema \n oppure la libreria \"easybashgui\" non si trova nel path...\n\n\n Per favore, scaricala da ${LIB_URL}, copiala nel tuo path ( p.es.: in /usr/local/bin/ ), e linkala in questo modo: \"ln -s /usr/local/bin/easybashgui_?.?.? /usr/local/bin/easybashgui\" ." 1>&2
+	[ "${l}" = "EN" ] && echo -e "It seems you don't have \"easybashgui\" in your system \n or \"easybashgui\" library isn't in your path ...\n\n\n Please, download it from ${LIB_URL}, copy it in your path (e.g.: in /usr/local/bin/ ), and link it in this way: \"ln -s /usr/local/bin/easybashgui_?.?.? /usr/local/bin/easybashgui\" ." 1>&2
+	#clean_temp
+	exit 1
+else
+	# Ok, easybashgui exists... let's check min required version...
+	: LIB_VERSION
+	: MIN_LIB_VERSION_REQUIRED
+	IFS=$'. \t\n'
+	array_LIB_VERSION=( $(echo -n "${LIB_VERSION}" ) )
+	array_MIN_LIB_VERSION_REQUIRED=( $(echo -n "${MIN_LIB_VERSION_REQUIRED}" ) )
+	IFS=$' \t\n'
+	#
+	if [ ${array_LIB_VERSION[0]} -gt ${array_MIN_LIB_VERSION_REQUIRED[0]} ]
+		then
+		obsolete_lib="NO"
+	elif [ ${array_LIB_VERSION[0]} -lt ${array_MIN_LIB_VERSION_REQUIRED[0]} ]
+		then
+		obsolete_lib="YES"
+	elif [ ${array_LIB_VERSION[0]} -eq ${array_MIN_LIB_VERSION_REQUIRED[0]} ]
+		then
+		if [ ${array_LIB_VERSION[1]} -gt ${array_MIN_LIB_VERSION_REQUIRED[1]} ]
+			then
+			obsolete_lib="NO"
+		elif [ ${array_LIB_VERSION[1]} -lt ${array_MIN_LIB_VERSION_REQUIRED[1]} ]
+			then
+			obsolete_lib="YES"
+		elif [ ${array_LIB_VERSION[1]} -eq ${array_MIN_LIB_VERSION_REQUIRED[1]} ]
+			then
+			if [ ${array_LIB_VERSION[2]} -gt ${array_MIN_LIB_VERSION_REQUIRED[2]} ]
+				then
+				obsolete_lib="NO"
+			elif [ ${array_LIB_VERSION[2]} -lt ${array_MIN_LIB_VERSION_REQUIRED[2]} ]
+				then
+				obsolete_lib="YES"
+			elif [ ${array_LIB_VERSION[2]} -eq ${array_MIN_LIB_VERSION_REQUIRED[2]} ]
+				then
+				obsolete_lib="NO"
+				# perche' le due versioni sono ESATTAMENTE identiche...
+			fi
+			#
+		fi #if [ ${array_LIB_VERSION[1]} -gt ${array_MIN_LIB_VERSION_REQUIRED[1]} ]
+		#
+	fi #if [ ${array_LIB_VERSION[0]} -gt ${array_MIN_LIB_VERSION_REQUIRED[0]} ]
+	#
+	if [ "${obsolete_lib}" = "YES" ]
+		then
+		[ "${l}" = "IT" ] && alert_message "Sembra \n che hai \n una versione \n di \"easybashgui\" \n nel tuo sistema \n inferiore \n alla ${MIN_LIB_VERSION_REQUIRED}\n...\n\n\n\n\n Per favore, \n scarica da \n ${LIB_URL} \n una versione \n recente \n di \"easybashgui\" \n e installala \n prima \n di lanciare \n il programma... :("
+		[ "${l}" = "EN" ] && alert_message "It seems \n you have \n an \"easybashgui\" \n version \n in your system \n prior \n to ${MIN_LIB_VERSION_REQUIRED}\n...\n\n\n\n\n Please, \n download from \n ${LIB_URL} \n a recent \n \"easybashgui\" \n version \n and install it \n first... :("
+		clean_temp
+		exit 1
+	fi
+fi
+# Fine sezione "dipendenze"...
+####################################
+#
+#
+#
+####
+#(foreground colors)
+export black='\E[30m'
+export red='\E[31m'
+export green='\E[32m'
+export yellow='\E[33m'
+export blue='\E[34m'
+export magenta='\E[35m'
+export cyan='\E[36m'
+export white='\E[37m'
+####
+#
+#
+#
+ciao()
+	{
+	[ "${l}" = "IT" ] && ok_message "A presto !"
+	[ "${l}" = "EN" ] && ok_message "See you !"
+	clean_temp
+	exit 0
+	}
+#
+#
+#
+crea_gtkrc_default()
+	{
+	cat <<-BLOCCO_CONFIGURAZIONE_GTKRC
+	#File di configurazione gtkrc di _Xdialog_ di bashkaraoke
+	style 'bashkaraoke'
+		{
+		#fontset = ""
+		bg[NORMAL] = { 0.0, 0.0, 0.0 }
+		#
+		fg[NORMAL] = { 0.52, 0.52, 0.52 }	#grigio
+		}
+	#
+	widget '*' style 'bashkaraoke'
+BLOCCO_CONFIGURAZIONE_GTKRC
+	}
+if [ "${mode}" = "Xdialog" ]
+	then
+	if [ "${crea_gtkrc_file}" = "SI" ]
+		then
+		crea_gtkrc_default 1> "${dir_Karaoke}/${gtkrc_file}"
+	fi
+fi
+#
+#
+#
+crea_rc_default()
+	{
+	#
+	cat <<-EOB1
+	export use_gtk="$(
+			if [ "${bashkaraoke_gtk}" = "SI" ]
+				then
+				echo -n "true"
+			else
+				echo -n "false"
+			fi 
+			)"
+	export use_gsw="$(
+			if [ "${bashkaraoke_gtk}" = "NO" -a "${gtkdialog}" = "SI" ]
+				then
+				echo -n "true"
+			else
+				echo -n "false"
+			fi 
+			)"
+	export use_buc="false"
+	export supermode="${default_mode}"
+	export karaoke_window="true"
+	export levels_window="$(
+				if [ "${mode}" = "dialog" ]
+					then
+					echo -n "false"
+				else
+					echo -n "true"
+				fi
+				)"
+	export channels_window="false"
+	export spectrogram_window="false"
+	export rows=2
+	export columns=${default_columns}
+	export font="${default_font}"
+	export background="${default_background}"
+	export foreground_1="${default_foreground_1}"
+	export foreground_2="${default_foreground_2}"
+	export soundfont="${default_soundfont}"
+	export extract_way="internal"
+	export error_correction_chars=0
+	export LANG="en_GB.UTF-8"
+	export char_encoding="ISO-8859-1"
+	export delimiter="______________________________________"
+	export predefvolume=${default_Volume}
+	export predefpitch=${default_Pitch}
+	export predefspeed=${default_Tempo}
+	export font_family="${default_font_family}"
+	export show_debug=0
+	export show_tabs=0
+EOB1
+	#
+	#
+	#
+	if [ ${#soundfont} -gt 0 ]
+		then
+		export soundfont_string="-x\"soundfont ${soundfont}\""
+	else
+		export soundfont_string=""
+	fi
+	}
+#
+#
+#
+	if [ "${crea_rc_file}" = "SI" ]
+		then
+		#
+		crea_rc_default 1> "${dir_Karaoke}/${rc_file}"
+		source "${dir_Karaoke}/${rc_file}"
+		#
+	fi
+#
+#
+#
+modifica_rc()
+	{
+	#
+	scrivi="NO"
+	#
+	####
+	#
+	# bashkaraoke configuration: BEGIN 
+	#
+	# Main configuration menu...
+	while :
+		do
+		[ "${l}" = "IT" ] && menu \
+					"Finestre..." \
+					"Estetica..." \
+					"Suono..." \
+					"Avanzato..." \
+					"Varie..." \
+					"TORNA alla configurazione di default..." \
+					"${delimiter}" \
+					"<-FATTO" 
+		[ "${l}" = "EN" ] && menu \
+					"Windows..." \
+					"Apparence..." \
+					"Sound..." \
+					"Advanced..." \
+					"Misc..." \
+					"GO BACK to default configuration..." \
+					"${delimiter}" \
+					"<-DONE"
+		scelta="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta} -eq 0 ] && break 1
+		#
+		if [ "${scelta}" = "Finestre..." -o "${scelta}" = "Windows..." ]
+			then
+			while :
+				do
+				[ "${l}" = "IT" ] && menu \
+							"Modo..." \
+							"Tipo..." \
+							"${delimiter}" \
+							"<-TORNA INDIETRO" 
+				[ "${l}" = "EN" ] && menu \
+							"Mode..." \
+							"Type..." \
+							"${delimiter}" \
+							"<-BACK" 
+				scelta_Finestre="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta_Finestre} -eq 0 ] && break 2
+				#
+				if [ "${scelta_Finestre}" = "Modo..." -o "${scelta_Finestre}" = "Mode..." ]
+					then
+					# 00) supermode
+					if [ "${l}" = "IT" ]
+						then
+						if [ "${use_gsw}" = "true" ]
+							then
+							question "Modo \n attuale: \n\n \"GSW\" + \"${supermode}\" \n\n\n Vuoi \n cambiarlo?"
+							risposta=${?}
+						else
+							question "Modo \n attuale: \n\n \"${supermode}\" \n\n\n Vuoi \n cambiarlo?"
+							risposta=${?}
+						fi
+					elif [ "${l}" = "EN" ]
+						then
+						if [ "${use_gsw}" = "true" ]
+							then
+							question "Current \n \"mode\" : \n\n \"GSW\" + \"${supermode}\" \n\n\n Do you want \n change it?"
+							risposta=${?}
+						else
+							question "Current \n \"mode\" : \n\n \"${supermode}\" \n\n\n Do you want \n change it?"
+							risposta=${?}
+						fi
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						while :
+							do
+							[ "${l}" = "IT" ] && menu \
+										"GTK (Schermo intero, finestra singola) -predefinito- ..." \
+										"${delimiter}" \
+										"GSW (Gtkdialog Single Window, finestra singola)..." \
+										"BUC (Basta Un Click, finestra singola)..." \
+										"auto (finestra multipla)..." \
+										"gtkdialog (finestra multipla)..." \
+										"Xdialog (finestra multipla)..." \
+										"kdialog (finestra multipla)..." \
+										"zenity (finestra multipla)..." \
+										"dialog (finestra multipla)..." \
+										"${delimiter}" \
+										"<-TORNA INDIETRO" 
+							[ "${l}" = "EN" ] && menu \
+										"GTK (Fullscreen, single window) -default- ..." \
+										"${delimiter}" \
+										"GSW (Gtkdialog Single Window, single window)..." \
+										"BUC (Basta Un Click, single window)..." \
+										"auto (multiple window)..." \
+										"gtkdialog (multiple window)..." \
+										"Xdialog (multiple window)..." \
+										"kdialog (multiple window)..." \
+										"zenity (multiple window)..." \
+										"dialog (multiple window)..." \
+										"${delimiter}" \
+										"<-BACK" 
+							scelta_Modo="$(0< "${dir_tmp}/${file_tmp}" )"
+							[ ${#scelta_Modo} -eq 0 ] && break 2
+							[ "${scelta_Modo}" = "Modo..." -o "${scelta_Modo}" = "Mode..." ] && break 2
+							#
+							#wait_for "Please wait..."
+							#
+							if [ "${scelta_Modo}" != "${delimiter}" -a "${scelta_Modo}" != "<-TORNA INDIETRO" -a "${scelta_Modo}" != "<-BACK" ]
+								then
+								#
+								scelta_Modo="$(echo "${scelta_Modo}" | cut -d ' ' -f 1 )"
+								[ "${scelta_Modo}" = "GTK" ] && scelta_Modo="gtk"
+								[ "${scelta_Modo}" = "GSW" ] && scelta_Modo="gsw"
+								[ "${scelta_Modo}" = "BUC" ] && scelta_Modo="buc"
+								: scelta_Modo
+								#
+								###################
+								# "auto"...
+								if [ "${scelta_Modo}" = "auto" ]
+									then
+									#sleep 1
+									#terminate_wait_for
+									#
+									use_gtk="false"
+									use_gsw="false"
+									use_buc="false"
+									#
+								else
+									#
+									###################
+									# Begin check "binario"...
+									if [ "${scelta_Modo}" = "gtk" ] 
+										then
+										binario="bashkaraoke-gtk"
+										#
+									elif [ "${scelta_Modo}" = "gsw" ] 
+										then
+										binario="gtkdialog"
+										#
+									else
+										binario="$(echo "${scelta_Modo}" )"
+										#
+									fi
+									esistenza_binario="$(type "${binario}" 2> /dev/null )"
+									if [ ${#esistenza_binario} -eq 0 ]
+										then
+										#sleep 1
+										#terminate_wait_for
+										#
+										[ "${l}" = "IT" ] && alert_message "Per usare \n il modo \"${scelta_Modo}\", \n devi avere \"${binario}\" \n installato \n nel tuo sistema... "
+										[ "${l}" = "EN" ] && alert_message "To use \n \"${scelta_Modo}\" mode, \n you must have \"${binario}\" \n in your system... "
+										#
+										continue 1
+									fi
+									# End check "binario"...
+									#
+									###################
+									#
+									# "You have to restart"...
+									if [ "${use_gtk}" = "true" -o "${use_gsw}" = "true" -o "${use_buc}" = "true" ]
+										then
+										if [ "${scelta_Modo}" != "gtk" -a "${scelta_Modo}" != "gsw" -a "${scelta_Modo}" != "buc" ]
+											then
+											#
+											#sleep 1
+											#terminate_wait_for
+											#
+											[ "${l}" = "IT" ] && alert_message "Per usare \n il modo \"${scelta_Modo}\", \n devi riavviare \n il programma..."
+											[ "${l}" = "EN" ] && alert_message "To use \n \"${scelta_Modo}\" mode, \n you have to \n restart program..."
+											#
+											#wait_for "Please wait..."
+											#
+										fi
+										#
+									else
+										#
+										:
+										#sleep 1
+										#terminate_wait_for
+										#
+									fi
+									#
+									###################
+									#
+									# Begin GTK, GSW and BUC settings...
+									if [ "${scelta_Modo}" = "gtk" ]
+										then
+										use_gtk="true"
+										#
+										#sleep 1
+										#terminate_wait_for
+										#
+										[ "${l}" = "IT" ] && alert_message "Per usare \n il modo \"GTK\", \n devi riavviare \n il programma..."
+										[ "${l}" = "EN" ] && alert_message "To use \n \"GTK\" mode, \n you have to \n restart program..."
+										#
+										#wait_for "Please wait..."
+										#
+										scelta_Modo="${supermode}"
+										: scelta_Modo
+									else
+										use_gtk="false"
+										#
+										: scelta_Modo
+									fi
+									#
+									if [ "${scelta_Modo}" = "gsw" ]
+										then
+										use_gsw="true"
+										#
+										#sleep 1
+										#terminate_wait_for
+										#
+										[ "${l}" = "IT" ] && alert_message "Per usare \n il modo \"GSW\", \n devi riavviare \n il programma..."
+										[ "${l}" = "EN" ] && alert_message "To use \n \"GSW\" mode, \n you have to \n restart program..."
+										#
+										#wait_for "Please wait..."
+										#
+										scelta_Modo="gtkdialog" # gtkdialog -it's _sure_ - is in the system...
+										: scelta_Modo
+									else
+										use_gsw="false"
+										#
+										: scelta_Modo
+									fi
+									#
+									if [ "${scelta_Modo}" = "buc" ]
+										then
+										use_buc="true"
+										#
+										#sleep 1
+										#terminate_wait_for
+										#
+										esistenza_kdialog="$(type "kdialog" 2> /dev/null )"
+										if [ ${#esistenza_kdialog} -gt 0 ]
+											then
+											if [ "${l}" = "IT" ]
+												then
+												question "Preferisci kdialog \n nelle finestre?"
+												risp="${?}"
+											elif [ "${l}" = "EN" ]
+												then
+												question "Do you prefere kdialog \n in windows?"
+												risp="${?}"
+											fi
+											if [ ${risp} -eq 0 ]
+												then
+												scelta_Modo="kdialog"
+											elif [ ${risp} -eq 1 ]
+												then
+												scelta_Modo="${supermode}"
+											else
+												exit 0
+											fi
+											#
+										fi
+										: scelta_Modo
+									else
+										use_buc="false"
+										#
+										: scelta_Modo
+									fi
+									# End GSW and BUC settings...
+									#
+									##############################
+									#
+									if [ "${scelta_Modo}" = "dialog" ]
+										then
+										for fd in 0 1
+											do
+											if [ ! -t ${fd} ]
+												then
+												#terminate_wait_for
+												[ "${l}" = "IT" ] && alert_message "Per usare \n il modo \"dialog\", \n devi lanciare \n $(basename "${0}" ) \n da un terminale... "
+												[ "${l}" = "EN" ] && alert_message "To use \n \"dialog\" mode, \n you must launch \n  $(basename "${0}" ) \n from a terminal... "
+												continue 2
+											fi
+										done
+									fi
+									#
+								fi #if [ "${scelta_Modo}" = "auto" ]
+								#
+								supermode="$(echo "${scelta_Modo}" )"
+								# =>
+								source easybashgui
+								#
+								##
+								#
+								export width="${default_width}"
+								export height="${default_height}"
+								if [ "${mode}" = "gtkdialog" ]
+									then
+									:
+								elif [ "${mode}" = "kdialog" ]
+									then
+									if [ ${#x_root} -gt 0 -a ${#y_root} -gt 0 ]
+										then
+										x="+$(( $(( ${x_root} / 2 )) - $(( ${width} / 2 )) ))"
+										y="+$(( $(( ${y_root} / 2 )) - $(( ${height} / 2 )) ))"
+									fi
+									dimensione_finestra="--geometry=${width}x${height}${x}${y}"
+									dimensione_finestra_1="--geometry=${width}x${height}${x}${y}"
+									dialogo="kdialog ${dimensione_finestra}"
+								elif [ "${mode}" = "zenity" ]
+									then
+									dimensione_finestra="--width=${width} --height=${height}"
+									dimensione_finestra_1="--width=${width} --height=${height}"
+								elif [ "${mode}" = "Xdialog" ]
+									then
+									dimensione_finestra="${width}x${height}"
+									dimensione_finestra_1="${width}x${height}"
+								fi
+								#
+								if [ "${mode}" = "gtkdialog" ]
+									then
+									:
+								elif [ "${mode}" = "kdialog" ]
+									then
+									kdialog()
+										{
+										num_param=${#}
+										IFS=$'\t'
+										exec	kdialog	--icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+																	do
+																	echo -en "${1}\t"
+																	shift
+																done )
+										#
+										}
+									#
+								elif [ "${mode}" = "zenity" ]
+									then
+									:
+									zenity()
+										{
+										num_param=${#}
+										IFS=$'\t'
+										exec	zenity	--window-icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+																		do
+																		echo -en "${1}\t"
+																		shift
+																	done )
+										#
+										}
+									#
+								elif [ "${mode}" = "Xdialog" ]
+									then
+									Xdialog()
+										{
+										num_param=${#}
+										if [ "${FUNCT_NAME}" = "menu" ]
+											then
+											#
+											IFS=$'\t'
+											exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+																		do
+																		[[ ${1} = Select* ]] && echo -en " \t" && shift && continue
+																		#
+																		echo -en "${1}\t"
+																		shift
+																	done )
+											#
+										elif [ "${FUNCT_NAME}" = "input" ]
+											then
+											#
+											IFS=$'\t'
+											exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+																		do
+																		[[ ${1} = Please* ]] && echo -en " \t" && shift && continue
+																		#
+																		echo -en "${1}\t"
+																		shift
+																	done )
+											#
+										elif [ "${FUNCT_NAME}" = "list" ]
+											then
+											#
+											IFS=$'\t'
+											exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+																		do
+																		[[ ${1} = Select* ]] && echo -en " \t" && shift && continue
+																		[[ ${1} = --icon ]] && shift && continue
+																		[[ ${1} = *.xpm ]] && shift && continue
+																		#
+																		echo -en "${1}\t"
+																		shift
+																	done )
+										else
+											#
+											IFS=$'\t'
+											exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+																		do
+																		[[ ${1} = --icon ]] && shift && continue
+																		[[ ${1} = *.xpm ]] && shift && continue
+																		#
+																		echo -en "${1}\t"
+																		shift
+																	done )
+											#
+										fi
+										}
+									#
+								fi
+								#
+								##
+								#
+								#sleep 1
+								#terminate_wait_for
+								#
+								break 1
+								#
+							else
+								#
+								:
+								#terminate_wait_for
+								#
+							fi # if [ "${scelta_Modo}" != "${delimiter}" -a "${scelta_Modo}" != "<-TORNA INDIETRO" -a "${scelta_Modo}" != "<-BACK" ]
+							if [ "${scelta_Modo}" = "${delimiter}" ]
+								then
+								#
+								continue 1
+								#
+							elif [ "${scelta_Modo}" = "<-TORNA INDIETRO" -o "${scelta_Modo}" = "<-BACK" ]
+								then
+								#
+								break 1
+								#
+							else
+								ciao
+							fi
+						done
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Finestre}" = "Tipo..." -o "${scelta_Finestre}" = "Type..." ]
+					then
+					# 0) karaoke_window
+					: karaoke_window
+					#
+					# 1) levels_window
+					: levels_window
+					#
+					# 2) channels_window
+					: channels_window
+					#
+					# 3) spectrogram_window
+					: spectrogram_window
+					#
+					[ "${l}" = "IT" ] && list \
+								"$( [ "${karaoke_window}" = "true" ] && echo "+" || echo "-" )Karaoke (clicca per abilitare)..." \
+								"$( [ "${levels_window}" = "true" ] && echo "+" || echo "-" )Livelli (clicca per abilitare)..." \
+								"$( [ "${channels_window}" = "true" ] && echo "+" || echo "-" )Canali (clicca per abilitare)..." \
+								"$( [ "${spectrogram_window}" = "true" ] && echo "+" || echo "-" )Spettrogramma (clicca per abilitare)..."
+					[ "${l}" = "EN" ] && list \
+								"$( [ "${karaoke_window}" = "true" ] && echo "+" || echo "-" )Karaoke (check to enable)..." \
+								"$( [ "${levels_window}" = "true" ] && echo "+" || echo "-" )Levels (check to enable)..." \
+								"$( [ "${channels_window}" = "true" ] && echo "+" || echo "-" )Channels (check to enable)..." \
+								"$( [ "${spectrogram_window}" = "true" ] && echo "+" || echo "-" )Spectrogram (check to enable)..."
+					IFS=$'\n' ; array_scelta_Finestre=( $(0< "${dir_tmp}/${file_tmp}" ) ) ; IFS=$' \t\n' ; [ ${#array_scelta_Finestre[@]} -eq 0 ] && continue 2
+					#
+					karaoke_window="false"
+					levels_window="false"
+					channels_window="false"
+					spectrogram_window="false"
+					for (( index=0 ; index < ${#array_scelta_Finestre[@]} ; index++ ))
+						do
+						scelta_Finestra="${array_scelta_Finestre[${index}]}"
+						if [ "${scelta_Finestra}" = "Karaoke (clicca per abilitare)..." -o "${scelta_Finestra}" = "Karaoke (check to enable)..." ]
+							then
+							karaoke_window="true"
+							continue
+						elif [ "${scelta_Finestra}" = "Livelli (clicca per abilitare)..." -o "${scelta_Finestra}" = "Levels (check to enable)..." ]
+							then
+							levels_window="true"
+							continue
+						elif [ "${scelta_Finestra}" = "Canali (clicca per abilitare)..." -o "${scelta_Finestra}" = "Channels (check to enable)..." ]
+							then
+							channels_window="true"
+							continue
+						elif [ "${scelta_Finestra}" = "Spettrogramma (clicca per abilitare)..." -o "${scelta_Finestra}" = "Spectrogram (check to enable)..." ]
+							then
+							spectrogram_window="true"
+							continue
+						fi
+					done
+					#
+					wait_seconds 2
+					break 1
+					#
+				elif [ "${scelta_Finestre}" = "${delimiter}" ]
+					then
+					#
+					continue 1
+					#
+				elif [ "${scelta_Finestre}" = "<-TORNA INDIETRO" -o "${scelta_Finestre}" = "<-BACK" ]
+					then
+					#
+					break 1
+					#
+				else
+					ciao
+				fi
+				#
+			done
+			#
+			continue 1
+			#
+		elif [ "${scelta}" = "Estetica..." -o "${scelta}" = "Apparence..." ]
+			then
+			while :
+				do
+				[ "${l}" = "IT" ] && menu \
+							"Colonne..." \
+							"Tipo carattere..." \
+							"Colore sfondo..." \
+							"Colore testo gia' cantato..." \
+							"Colore testo da cantare..." \
+							"${delimiter}" \
+							"<-TORNA INDIETRO" 
+				[ "${l}" = "EN" ] && menu \
+							"Columns..." \
+							"Font..." \
+							"Background color..." \
+							"Lyric color (already sung)..." \
+							"Lyric color (to sing)..." \
+							"${delimiter}" \
+							"<-BACK" 
+				scelta_Estetica="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta_Estetica} -eq 0 ] && break 2
+				if [ "${scelta_Estetica}" = "Righe..." -o "${scelta_Estetica}" = "Rows..." ]
+					then
+					# 4) rows
+					if [ "${l}" = "IT" ]
+						then
+						question "Numero \n di righe \n attuale: \n\n \"${rows}\" \n\n\n Vuoi \n cambiarlo?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n \"rows\" \n value: \n\n \"${rows}\" \n\n\n Do you want \n change it?"
+						risposta=${?}
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						[ "${l}" = "IT" ] && menu "2 (consigliato)" "3"
+						[ "${l}" = "EN" ] && menu "2 (suggested)" "3"
+						rows="$(cat "${dir_tmp}/${file_tmp}" | cut -d '(' -f 1 | cut -d ' ' -f 1 )" ; [ ${#rows} -eq 0 ] && continue 2
+						wait_seconds 2
+						break 1
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Estetica}" = "Colonne..." -o "${scelta_Estetica}" = "Columns..." ]
+					then
+					# 5) columns
+					if [ "${l}" = "IT" ]
+						then
+						question "Numero \n di columns \n attuale: \n\n \"${columns}\" \n\n\n Vuoi \n cambiarlo?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n \"columns\" \nvalue: \n\n \"${columns}\" \n\n\n Do you want \n change it?"
+						risposta=${?}
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						input 1 "${columns}"
+						columns="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#columns} -eq 0 ] && continue 2
+						wait_seconds 2
+						break 1
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Estetica}" = "Tipo carattere..." -o "${scelta_Estetica}" = "Font..." ]
+					then
+					# 6) font
+					font_to_confirm="$(echo "${font}" | gsed s\#'^-'#''# )"
+					if [ "${l}" = "IT" ]
+						then
+						question "Font \n attuale: \n\n \"$(echo "${font_to_confirm}" | tr '[[:punct:]]' '?' | tr -s '?' | tr '?' '\n' )\" \n\n\n Vuoi \n cambiarlo?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n font: \n\n \"$(echo "${font_to_confirm}" | tr '[[:punct:]]' '?' | tr -s '?' | tr '?' '\n' )\" \n\n\n Do you want \n change it?"
+						risposta=${?}
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						if [ ${#columns} -eq 0 ]
+							then
+							verify_columns="${default_columns}"
+						else
+							verify_columns="${columns}"
+						fi
+						verify_font()
+							{
+							font_to_verify="-${1}"
+							#
+							[ "${l}" = "IT" ] && xterm -cr "${background}" -xrm 'xterm*cursorUnderLine: true' -xrm "xterm*allowWindowOps: true" -title "$(basename "${0}"): font check" -bg "${background}" -fg "${foreground_1}" -fn "${font_to_verify}" -geometry ${verify_columns}x2+20+400 -e "echo -en \"\n\n\n$(for ((i=1 ; i <= ${verify_columns} ; i++ )) ; do echo -en "${i:(-1)}" ; done)\n (premi un tasto...)\r\" ; read dummy_var"
+							#
+							[ "${l}" = "EN" ] && xterm -cr "${background}" -xrm 'xterm*cursorUnderLine: true' -xrm "xterm*allowWindowOps: true" -title "$(basename "${0}"): font check" -bg "${background}" -fg "${foreground_1}" -fn "${font_to_verify}" -geometry ${verify_columns}x2+20+400 -e "echo -en \"\n\n\n$(for ((i=1 ; i <= ${verify_columns} ; i++ )) ; do echo -en "${i:(-1)}" ; done)\n ( hit a key... )\r\" ; read dummy_var"
+							}
+						######################################
+						if [ ${#esistenza_Xdialog} -gt 0 ]
+							then
+							Xdialog_presente_e_funzionante="$(command Xdialog --version 2>&1 )"
+							if [ $(echo -n "${Xdialog_presente_e_funzionante}" | grep "Do you run under X11 with GTK.*installed ?" | wc -c ) -eq 0 ]
+								then
+								font_selector="Xdialog"
+								#font_selector="self-made"
+							else
+								font_selector="self-made"
+							fi
+						else
+							font_selector="self-made"
+						fi
+						: font_selector
+						######################################
+						#
+						: font
+						#
+						if [ "${font_selector}" = "self-made" ]
+							then
+							[ "${l}" = "IT" ] && wait_for "Sto' cercando i tuoi fonts..."
+							[ "${l}" = "EN" ] && wait_for "Retrieving your fonts..."
+							lista__dirs="$(find /usr -maxdepth 4 -type d -path "*X11*" 2> /dev/null )"
+							#lista__fonts_dir="$(find ${lista__dirs} -type f -name "fonts.dir" 2> /dev/null )"
+							IFS=$'\n' ; array__fonts_dir=( $(find ${lista__dirs} -type f -name "fonts.dir" 2> /dev/null ) ) ; IFS=$' \t\n'
+							#
+							font_char_encoding="${char_encoding#*-}"
+							#
+							#lista_fonts="$(cat ${lista__fonts_dir} | grep "${font_char_encoding}$" | cut -d ' ' -f 2,3,4,5,6,7,8 | gsed s\#'^-'#''# )"
+							if [ ${#array__fonts_dir[@]} -gt 0 ]
+								then
+								#lista__fonts_dir="$(for (( index=0 ; index < ${#array__fonts_dir[@]} ; index++ ))
+								#			do
+								#			fonts_dir="${array__fonts_dir[${index}]}"
+								#			echo "${fonts_dir}"
+								#		done )"
+								lista__fonts_dir="$(for (( index=0 ; index < ${#array__fonts_dir[@]} ; index++ ))
+											do
+											fonts_dir="${array__fonts_dir[${index}]}"
+											echo -en "\"${fonts_dir}\" "
+										done )"
+								lista_fonts="$(eval cat ${lista__fonts_dir} | grep "${font_char_encoding}$" | cut -d ' ' -f 2,3,4,5,6,7,8 | gsed s\#'^-'#''# )"
+								#
+							else
+								lista_fonts=""
+								#
+							fi
+							: lista_fonts
+							#
+							terminate_wait_for
+							#
+						fi
+						: lista_fonts
+						#
+						old_font="${font_to_confirm}"
+						prima_volta="SI"
+						while :
+							do
+							#
+							[ "${l}" = "IT" ] && menu \
+										"Scegli un nuovo font..." \
+										"Salva il font..." \
+										"${delimiter}" \
+										"Torna al font precedente..." \
+										"Torna al font di default..." \
+										"${delimiter}" \
+										"<-TORNA INDIETRO" 
+							[ "${l}" = "EN" ] && menu \
+										"Choose a new font..." \
+										"Save font..." \
+										"${delimiter}" \
+										"Back to prior font..." \
+										"Back to default font..." \
+										"${delimiter}" \
+										"<-BACK" 
+							scelta_fnt="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta_fnt} -eq 0 ] && break 1
+							if [ "${scelta_fnt}" = "Scegli un nuovo font..." -o "${scelta_fnt}" = "Choose a new font..." ]
+								then
+								# Scelta font...
+								if [ "${font_selector}" = "Xdialog" ]
+									then
+									command Xdialog --stdout --rc-file ${dir_Karaoke}/${gtkrc_file} --fontsel " " ${dimensione_finestra} 1> "${dir_tmp}/${file_tmp}"
+									scelta_font="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta_font} -eq 0 ] && continue 3
+									#
+									font_to_confirm="$(echo "${scelta_font}" | gsed s\#'^-'#''# )"
+									#
+									[ "${prima_volta}" = "SI" ] && [ "${l}" = "IT" ] && message "Font \n attuale: \n\n \"$(echo "${font_to_confirm}" | tr '[[:punct:]]' '?' | tr -s '?' | tr '?' '\n' )\" \n ... \n\n Nella finestra \n successiva, \n se ${verify_columns} numeri \n sono sulla \n stessa riga, \n il font e' OK \n ..." ; prima_volta="NO"
+									[ "${prima_volta}" = "SI" ] && [ "${l}" = "EN" ] && message "Current \n font: \n\n \"$(echo "${font_to_confirm}" | tr '[[:punct:]]' '?' | tr -s '?' | tr '?' '\n' )\" \n ...\n\n In next window, \n if ${verify_columns} numbers \n are on the same row, \n font is OK \n ..." ; prima_volta="NO"
+									#
+									#Verifica font...
+									verify_font "${font_to_confirm}"
+									#
+								elif [ "${font_selector}" = "self-made" ]
+									then
+									if [ ${#lista_fonts} -eq 0 ]
+										then
+										[ "${l}" = "IT" ] && message "Per favore, \n scrivi il nome del font \n per esteso..."
+										[ "${l}" = "EN" ] && message "Please, \n write complete \n font name..."
+										#
+										[ "${l}" = "IT" ] && input 1 "${font_to_confirm}"
+										[ "${l}" = "EN" ] && input 1 "${font_to_confirm}"
+										#
+										font_to_confirm="$(0< "${dir_tmp}/${file_tmp}" )"
+										#
+										if [ ${#font_to_confirm} -gt 0 ]
+											then
+											[ "${l}" = "IT" ] && ok_message "Per favore, \n seleziona \n \"salva il font\" \n ..."
+											[ "${l}" = "EN" ] && ok_message "Please, \n select \n \"save font\" \n ..."
+										fi
+										#
+									else
+										#
+										IFS=$'\n'
+										menu $(echo "${lista_fonts}" | grep -- '-' | cut -d '-' -f 1,2,3,4,5,6,7,8,9,10 | sort | uniq )
+										IFS=$' \t\n'
+										prefix="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#prefix} -eq 0 ] && continue 3
+										#
+										IFS=$'\n' ; array_lista_finale=( $(echo "${lista_fonts}" | fgrep "${prefix}" | sort | uniq ) ) ; IFS=$' \t\n'
+										#
+										if [ ${#array_lista_finale[@]} -eq 0 ]
+											then
+											[ "${l}" = "IT" ] && alert_message "Nessun font \n usabile \n con quel nome \n ..."
+											[ "${l}" = "EN" ] && alert_message "No usable font \n with that name \n ..."
+											continue 1
+										elif [ ${#array_lista_finale[@]} -eq 1 ]
+											then
+											font_to_confirm="${array_lista_finale[0]}"
+											#
+										elif [ ${#array_lista_finale[@]} -ge 2 ]
+											then
+											eval menu $(for (( index=0 ; index < ${#array_lista_finale[@]} ; index++ ))
+														do
+														#
+														font_progressivo="${array_lista_finale[${index}]}"
+														echo -en "\"${font_progressivo}\" "
+														#
+													done )
+											font_to_confirm="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#font_to_confirm} -eq 0 ] && continue 3
+											#
+										fi #if [ ${#array_lista_finale[@]} -eq 0 ]
+										: font_to_confirm
+										#
+									fi #if [ ${#lista_fonts} -eq 0 ]
+									: font_to_confirm
+									#
+									#[ "${prima_volta}" = "SI" ] && [ "${l}" = "IT" ] && message "Ora seleziona \n la dimensione \n del font \n ..." ; prima_volta="NO"
+									#[ "${prima_volta}" = "SI" ] && [ "${l}" = "EN" ] && message "Now select \n font size \n ..." ; prima_volta="NO"
+									#
+									while :
+										do
+										[ "${l}" = "IT" ] && menu \
+													"Scegli la dimensione..." \
+													"${delimiter}" \
+													"<-FATTO"
+										[ "${l}" = "EN" ] && menu \
+													"Choose size..." \
+													"${delimiter}" \
+													"<-DONE"
+										scelta_dimensione_font="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta_dimensione_font} -eq 0 ] && continue 4
+										#
+										if [ "${scelta_dimensione_font}" = "Scegli la dimensione..." -o "${scelta_dimensione_font}" = "Choose size..." ]
+											then
+											[ ${#font_size} -gt 0 ] && init_value="${font_size}" || init_value="70"
+											[ "${l}" = "IT" ] && adjust "Per favore, \n setta la dimensione \n del font" "20" "${init_value}" "120"
+											[ "${l}" = "EN" ] && adjust "Please, \n adjust font size" "20" "${init_value}" "120"
+											font_size="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#font_size} -eq 0 ] && continue 4
+											#
+											font_to_confirm="$(echo "${font_to_confirm}" | gsed -n s\#"^\(.*\)-.*-.*-.*-.*-.*-.*-\(.*-.*\)$"#"\1-${font_size}-\*-\*-\*-\*-\*-\2"#p )"
+											#
+											[ "${prima_volta}" = "SI" ] && [ "${l}" = "IT" ] && message "Font \n attuale: \n\n \"$(echo "${font_to_confirm}" | tr '[[:punct:]]' '?' | tr -s '?' | tr '?' '\n' )\" \n ... \n\n Nella finestra \n successiva, \n se tutti i numeri \n sono sulla \n stessa riga, \n il font e' OK \n ..." ; prima_volta="NO"
+											[ "${prima_volta}" = "SI" ] && [ "${l}" = "EN" ] && message "Current \n font: \n\n \"$(echo "${font_to_confirm}" | tr '[[:punct:]]' '?' | tr -s '?' | tr '?' '\n' )\" \n ...\n\n In next window, \n if all numbers \n are on the same row, \n font is OK \n ..." ; prima_volta="NO"
+											#
+											#Verifica font...
+											verify_font "${font_to_confirm}"
+											#
+										elif [ "${scelta_dimensione_font}" = "${delimiter}" ]
+											then
+											continue 1
+											#
+										elif [ "${scelta_dimensione_font}" = "<-FATTO" -o "${scelta_dimensione_font}" = "<-DONE" ]
+											then
+											[ "${l}" = "IT" ] && ok_message "Per favore, \n seleziona \n \"salva il font\" \n ..."
+											[ "${l}" = "EN" ] && ok_message "Please, \n select \n \"save font\" \n ..."
+											break 1
+											#
+										fi #if [ "${scelta_dimensione_font}" = "Scegli la dimensione..." -o "${scelta_dimensione_font}" = "Choose size..." ]
+										#
+									done
+									#
+								fi #if [ "${font_selector}" = "Xdialog" ]
+								#
+							elif [ "${scelta_fnt}" = "Salva il font..." -o "${scelta_fnt}" = "Save font..." -o "${scelta_fnt}" = "Salva il font \"${font_to_confirm}\"..." -o "${scelta_fnt}" = "Save font \"${font_to_confirm}\"..." ]
+								then
+								font="-${font_to_confirm}"
+								wait_seconds 2
+								break 1
+								#
+							elif [ "${scelta_fnt}" = "Torna al font precedente..." -o "${scelta_fnt}" = "Back to prior font..." ]
+								then
+								font_to_confirm="${old_font}"
+								[ "${l}" = "IT" ] && message "Font \n attuale: \n\n \"$(echo "${font_to_confirm}" | tr '[[:punct:]]' '?' | tr -s '?' | tr '?' '\n' )\" \n ... \n\n Nella finestra \n successiva, \n se tutti i numeri \n sono sulla \n stessa riga, \n il font e' OK \n ..."
+								[ "${l}" = "EN" ] && message "Current \n font: \n\n \"$(echo "${font_to_confirm}" | tr '[[:punct:]]' '?' | tr -s '?' | tr '?' '\n' )\" \n ...\n\n In next window, \n if all numbers \n are on the same row, \n font is OK \n ..."
+								#
+								#Verifica font...
+								verify_font "${font_to_confirm}"
+								#
+								continue 1
+								#
+							elif [ "${scelta_fnt}" = "Torna al font di default..." -o "${scelta_fnt}" = "Back to default font..." ]
+								then
+								font_to_confirm="$(echo "${default_font}" | gsed s\#'^-'#''# )"
+								[ "${l}" = "IT" ] && message "Font \n attuale: \n\n \"$(echo "${font_to_confirm}" | tr '[[:punct:]]' '?' | tr -s '?' | tr '?' '\n' )\" \n ... \n\n Nella finestra \n successiva, \n se tutti i numeri \n sono sulla \n stessa riga, \n il font e' OK \n ..."
+								[ "${l}" = "EN" ] && message "Current \n font: \n\n \"$(echo "${font_to_confirm}" | tr '[[:punct:]]' '?' | tr -s '?' | tr '?' '\n' )\" \n ...\n\n In next window, \n if all numbers \n are on the same row, \n font is OK \n ..."
+								#
+								#Verifica font...
+								verify_font "${font_to_confirm}"
+								#
+								continue 1
+								#
+							elif [ "${scelta_fnt}" = "${delimiter}" ]
+								then
+								continue 1
+								#
+							elif [ "${scelta_fnt}" = "<-TORNA INDIETRO" -o "${scelta_fnt}" = "<-BACK" ]
+								then
+								#
+								break 1
+								#
+							else
+								ciao
+							fi #if [ "${scelta_fnt}" = "Seleziona un nuovo font..." -o "${scelta_fnt}" = "Select a new font..." ]
+						done
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Estetica}" = "Colore sfondo..." -o "${scelta_Estetica}" = "Background color..." ]
+					then
+					# 7) background
+					if [ "${l}" = "IT" ]
+						then
+						question "Colore \n di sfondo \n attuale: \n\n \"${background}\" \n\n\n Vuoi \n cambiarlo?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n background \n color: \n\n \"${background}\" \n\n\n Do you want \n change it?"
+						risposta=${?}
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						converti()
+							{
+							echo -n '#'
+							for arg in ${@}
+								do
+								exa=$(echo "obase=16; ${arg}" | bc )
+								if [ ${#exa} -eq 1 ]
+									then
+									exa="0${exa}"
+								fi
+								echo -n "${exa}"
+							done
+							echo 
+							}
+						#
+						######################################
+						color_selector="self-made"
+						if [ ${#esistenza_Xdialog} -gt 0 ]
+							then
+							Xdialog_presente_e_funzionante="$(Xdialog --version 2>&1 )"
+							if [ $(echo -n "${Xdialog_presente_e_funzionante}" | grep "Do you run under X11 with GTK.*installed ?" | wc -c ) -eq 0 ]
+								then
+								color_selector="Xdialog"
+							fi
+						fi
+						[ "${mode}" = "kdialog" ] && color_selector="kdialog"
+						#
+						: color_selector
+						########################################
+						#
+						if [ "${color_selector}" = "Xdialog" ]
+							then
+							converti $(command Xdialog --stdout --rc-file "${dir_Karaoke}/${gtkrc_file}" --colorsel "Select color..." ${dimensione_finestra} ) \
+							1> "${dir_tmp}/${file_tmp}"
+							#
+						elif [ "${color_selector}" = "kdialog" ]
+							then
+							command kdialog ${dimensione_finestra} --getcolor | \
+							tr '[[:lower:]]' '[[:upper:]]' 1> "${dir_tmp}/${file_tmp}"
+							#
+						else
+							menu "black" "red" "green" "yellow" "blue" "magenta" "cyan" "white"
+							#
+						fi
+						background="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#background} -eq 0 ] && continue 2
+						wait_seconds 2
+						break 1
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Estetica}" = "Colore testo gia' cantato..." -o "${scelta_Estetica}" = "Lyric color (already sung)..." ]
+					then
+					# 8) foreground_1
+					if [ "${l}" = "IT" ]
+						then
+						question "Colore \n del testo \n attuale \n (gia' cantato): \n\n \"${foreground_1}\" \n\n\n Vuoi \n cambiarlo?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n lyric color \n (already sung): \n\n \"${foreground_1}\" \n\n\n Do you want \n change it?"
+						risposta=${?}
+					fi
+					#
+					if [ ${risposta} -eq 0 ]
+						then
+						menu "black" "red" "green" "yellow" "blue" "magenta" "cyan" "white"
+						foreground_1="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#foreground_1} -eq 0 ] && continue 2
+						wait_seconds 2
+						break 1
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Estetica}" = "Colore testo da cantare..." -o "${scelta_Estetica}" = "Lyric color (to sing)..." ]
+					then
+					# 9) foreground_2
+					if [ "${l}" = "IT" ]
+						then
+						question "Colore \n del testo \n attuale \n (da cantare): \n\n \"${foreground_2}\" \n\n\n Vuoi \n cambiarlo?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n lyric color \n (to sing): \n\n \"${foreground_2}\" \n\n\n Do you want \n change it?"
+						risposta=${?}
+					fi
+					#
+					if [ ${risposta} -eq 0 ]
+						then
+						eval $(echo "menu black red green yellow blue magenta cyan white" | gsed s\#"${foreground_1}"#''# )
+						foreground_2="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#foreground_2} -eq 0 ] && continue 2
+						wait_seconds 2
+						break 1
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Estetica}" = "${delimiter}" ]
+					then
+					#
+					continue 1
+					#
+				elif [ "${scelta_Estetica}" = "<-TORNA INDIETRO" -o "${scelta_Estetica}" = "<-BACK" ]
+					then
+					#
+					break 1
+					#
+				else
+					ciao
+				fi
+				#
+			done
+			#
+			continue 1
+			#
+		elif [ "${scelta}" = "Suono..." -o "${scelta}" = "Sound..." ]
+			then
+			while :
+				do
+				[ "${l}" = "IT" ] && menu \
+							"Font sonoro..." \
+							"${delimiter}" \
+							"<-TORNA INDIETRO" 
+				[ "${l}" = "EN" ] && menu \
+							"Soundfont..." \
+							"${delimiter}" \
+							"<-BACK" 
+				scelta_Suono="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta_Suono} -eq 0 ] && break 2
+				#
+				if [ "${scelta_Suono}" = "Font sonoro..." -o "${scelta_Suono}" = "Soundfont..." ]
+					then
+					# 10) soundfont
+					if [ "${l}" = "IT" ]
+						then
+						question "Font sonoro \n attuale: \n\n \"$(basename "${soundfont}" )\" \n\n\n Vuoi \n cambiarlo? \n ( P.es. \n i soundfonts \n hanno \n l'estensione \".sf2\" )"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n soundfont: \n\n \"$(basename "${soundfont}" )\" \n\n\n Do you want \n change it? \n ( E.g. \n soundfonts \n have \".sf2\" \n extension )"
+						risposta=${?}
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						while :
+							do
+							fselect
+							soundfont="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#soundfont} -eq 0 ] && continue 3
+							#
+							if [ ! -f "${soundfont}" ]
+								then
+								[ "${l}" = "IT" ] && alert_message "$(basename "${soundfont}" ) \n non e' \n un file..."
+								[ "${l}" = "EN" ] && alert_message "$(basename "${soundfont}" ) \n it's not \n a file..."
+								#
+								continue 1
+								#
+							else
+								#
+								wait_seconds 2
+								break 1
+								#
+							fi
+							#
+						done
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Suono}" = "${delimiter}" ]
+					then
+					#
+					continue 1
+					#
+				elif [ "${scelta_Suono}" = "<-TORNA INDIETRO" -o "${scelta_Suono}" = "<-BACK" ]
+					then
+					#
+					break 1
+					#
+				else
+					ciao
+				fi
+				#
+			done
+			#
+			continue 1
+			#
+		elif [ "${scelta}" = "Avanzato..." -o "${scelta}" = "Advanced..." ]
+			then
+			while :
+				do
+				[ "${l}" = "IT" ] && menu \
+							"Estrazione testo canzone..." \
+							"Rapporto tolleranza agli errori/precisione..." \
+							"${delimiter}" \
+							"<-TORNA INDIETRO" 
+				[ "${l}" = "EN" ] && menu \
+							"Lyric extraction..." \
+							"Error tolerance/precision ratio..." \
+							"${delimiter}" \
+							"<-BACK" 
+				scelta_Avanzato="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta_Avanzato} -eq 0 ] && break 2
+				#
+				if [ "${scelta_Avanzato}" = "Estrazione testo canzone..." -o "${scelta_Avanzato}" = "Lyric extraction..." ]
+					then
+					# 11) extract_way
+					if [ "${l}" = "IT" ]
+						then
+						question "Attuale \n valore \n \"extract_way\": \n\n \"${extract_way}\" \n\n\n Vuoi \n cambiare \n il modo \n con cui \n e' estratto \n\n il testo \n dal midi?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n \"extract_way\" \n value: \n\n \"${extract_way}\" \n\n\n Do you want \n change method \n lyric is extracted \n from midi?"
+						risposta=${?}
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						[ "${l}" = "IT" ] && menu "internal" "through__midi_text24_pl (serve midi_text24.pl)" "through__pykar (serve pykar)"
+						[ "${l}" = "EN" ] && menu "internal" "through__midi_text24_pl (you need midi_text24.pl)" "through__pykar (you need pykar)"
+						extract_way="$(cat "${dir_tmp}/${file_tmp}" | cut -d '(' -f 1 | cut -d ' ' -f 1 )" ; [ ${#extract_way} -eq 0 ] && break 2
+						wait_seconds 2
+						break 1
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Avanzato}" = "Rapporto tolleranza agli errori/precisione..." -o "${scelta_Avanzato}" = "Error tolerance/precision ratio..." ]
+					then
+					# 12) error_correction_chars
+					if [ "${l}" = "IT" ]
+						then
+						question "Attuale \n valore \n \"error_correction_chars\": \n\n \"${error_correction_chars}\" \n\n\n Vuoi \n cambiare \n il rapporto \n tra: \n tolleranza agli errori \n /precisione?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n \"error_correction_chars\" \n value: \n\n \"${error_correction_chars}\" \n\n\n Do you want \n change \n error tolerance/precision \n ratio?"
+						risposta=${?}
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						[ "${l}" = "IT" ] && menu "0 (nessuna tolleranza/precisione perfetta)" "1 (tolleranza media/precisione media)" "2 (tolleranza alta/precisione bassa)"
+						[ "${l}" = "EN" ] && menu "0 (no tolerance/perfect precision)" "1 (average tolerance/average precision)" "2 (high tolerance/low precision)"
+						error_correction_chars="$(cat "${dir_tmp}/${file_tmp}" | cut -d '(' -f 1 | tr -dc '[[:digit:]]' )" ; [ ${#error_correction_chars} -eq 0 ] && continue 2
+						wait_seconds 2
+						break 1
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Avanzato}" = "${delimiter}" ]
+					then
+					#
+					continue 1
+					#
+				elif [ "${scelta_Avanzato}" = "<-TORNA INDIETRO" -o "${scelta_Avanzato}" = "<-BACK" ]
+					then
+					#
+					break 1
+					#
+				else
+					ciao
+				fi
+				#
+			done
+			#
+			continue 1
+			#
+		elif [ "${scelta}" = "Varie..." -o "${scelta}" = "Misc..." ]
+			then
+			while :
+				do
+				[ "${l}" = "IT" ] && menu \
+							"Lingua delle canzoni..." \
+							"Codifica dei caratteri..." \
+							"Delimitatore dei campi menu..." \
+							"${delimiter}" \
+							"<-TORNA INDIETRO" 
+				[ "${l}" = "EN" ] && menu \
+							"Song language..." \
+							"Character encoding..." \
+							"Menu field delimiter..."
+							"${delimiter}" \
+							"<-BACK" 
+				scelta_Varie="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta_Varie} -eq 0 ] && break 2
+				#
+				if [ "${scelta_Varie}" = "Lingua delle canzoni..." -o "${scelta_Varie}" = "Song language..." ]
+					then
+					# 13) LANG
+					if [ "${l}" = "IT" ]
+						then
+						question "Attuale \n valore \n \"LANG\": \n\n \"${LANG}\" \n\n\n Vuoi \n cambiarlo?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n \"LANG\" \n value: \n\n \"${LANG}\" \n\n\n Do you want \n change it?"
+						risposta=${?}
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						menu $(locale -a | grep -i "\.UTF.\?8" )
+						LANG_pre="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#LANG_pre} -eq 0 ] && continue 2
+						#
+						LANG="$(echo -n "${LANG_pre}" | gsed -n s\#'\(.*\)\..*'#'\1'#p ).UTF-8"
+						wait_seconds 2
+						break 1
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Varie}" = "Codifica dei caratteri..." -o "${scelta_Varie}" = "Character encoding..." ]
+					then
+					# 14) char_encoding
+					if [ "${l}" = "IT" ]
+						then
+						question "Attuale \n valore \n \"char_encoding\": \n\n \"${char_encoding}\" \n\n\n Vuoi \n cambiarlo?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n \"char_encoding\" \n value: \n\n \"${char_encoding}\" \n\n\n Do you want \n change it?"
+						risposta=${?}
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						menu $(iconv -l | gsed s\#'//'#''# )
+						char_encoding_array=( $(0< "${dir_tmp}/${file_tmp}" ) )
+						char_encoding="${char_encoding_array[0]}" ; [ ${#char_encoding} -eq 0 ] && continue 2
+						wait_seconds 2
+						break 1
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Varie}" = "Delimitatore dei campi menu..." -o "${scelta_Varie}" = "Menu field delimiter..." ]
+					then
+					# 15) delimiter
+					if [ "${l}" = "IT" ]
+						then
+						question "Attuale \n valore \n \"delimiter\": \n\n \"${delimiter}\" \n\n\n Vuoi \n cambiarlo?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n \"delimiter\" \n value: \n\n \"${delimiter}\" \n\n\n Do you want \n change it?"
+						risposta=${?}
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						menu "______________________________________" " -------------------------------------" " " "..." "[CUSTOM]"
+						delimiter="$(cat "${dir_tmp}/${file_tmp}" )" ; [ ${delimiter} -eq 0 ] && continue 2
+						if [ "${delimiter}" = "[CUSTOM]" ]
+							then
+							input 1 "______________________________________"
+							delimiter="$(cat "${dir_tmp}/${file_tmp}" )" ; [ ${delimiter} -eq 0 ] && continue 2
+						fi
+						wait_seconds 2
+						break 1
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Varie}" = "${delimiter}" ]
+					then
+					#
+					continue 1
+					#
+				elif [ "${scelta_Varie}" = "<-TORNA INDIETRO" -o "${scelta_Varie}" = "<-BACK" ]
+					then
+					#
+					break 1
+					#
+				else
+					ciao
+				fi
+				#
+			done
+			#
+			continue 1
+			#
+		elif [ "${scelta}" = "${delimiter}" ]
+			then
+			#
+			continue 1
+			#
+		elif [ "${scelta}" = "TORNA alla configurazione di default..." -o "${scelta}" = "GO BACK to default configuration..." ]
+			then
+			if [ "${l}" = "IT" ]
+				then
+				question "Vuoi \n davvero \n tornare \n alla configurazione \n di default ?"
+				risposta=${?}
+			elif [ "${l}" = "EN" ]
+				then
+				question "Really \n do you want \n come back \n to default \n configuration ?"
+				risposta=${?}
+			fi
+			if [ ${risposta} -eq 0 ]
+				then
+				crea_rc_default 1> "${dir_Karaoke}/${rc_file}"
+				source "${dir_Karaoke}/${rc_file}"
+				#
+				: soundfont_string
+				#
+				break 1
+				#
+			elif [ ${risposta} -eq 1 ]
+				then
+				#
+				continue 1
+				#
+			else
+				ciao
+			fi
+		elif [ "${scelta}" = "<-FATTO" -o "${scelta}" = "<-DONE" ]
+			then
+			#
+			scrivi="SI"
+			break 1
+			#
+		else
+			ciao
+		fi
+		#
+	done
+	#
+	# configuration: END 
+	#
+	####
+	#
+	[ "${scrivi}" = "SI" ] && \
+	cat <<-EOB2 1> "${dir_tmp}/${file_tmp}"
+	export use_gtk="${use_gtk}"
+	export use_gsw="${use_gsw}"
+	export use_buc="${use_buc}"
+	export supermode="${supermode}"
+	export karaoke_window="${karaoke_window}"
+	export levels_window="${levels_window}"
+	export channels_window="${channels_window}"
+	export spectrogram_window="${spectrogram_window}"
+	export rows=${rows}
+	export columns=${columns}
+	export font="${font}"
+	export background="${background}"
+	export foreground_1="${foreground_1}"
+	export foreground_2="${foreground_2}"
+	export soundfont="${soundfont}"
+	export extract_way="${extract_way}"
+	export error_correction_chars=${error_correction_chars}
+	export LANG="${LANG}"
+	export char_encoding="${char_encoding}"
+	export delimiter="${delimiter}"
+	export predefvolume=${default_Volume}
+	export predefpitch=${default_Pitch}
+	export predefspeed=${default_Tempo}
+	export font_family="${font_family}"
+	export show_debug=0
+	export show_tabs=0
+EOB2
+	#
+	#
+	#
+	IFS=$'\n' ; array_voci_configurazione=( $(0< "${dir_tmp}/${file_tmp}" ) ) ; IFS=$' \t\n'
+	if [ ${#array_voci_configurazione[@]} -lt 19 ]
+		then
+		:
+	else
+		cp -f "${dir_tmp}/${file_tmp}" "${dir_Karaoke}/${rc_file}"
+		source "${dir_Karaoke}/${rc_file}"
+	fi
+	#
+	if [ ${#soundfont} -gt 0 ]
+		then
+		export soundfont_string="-x\"soundfont ${soundfont}\""
+	else
+		export soundfont_string=""
+	fi
+	}
+#
+#
+#
+display_levels_pre()
+	{
+	#
+	: min_Volume
+	: default_Volume
+	array_valori_Volume__percent=( $(percentualizza ${min_Volume} ${default_Volume} ${max_Volume} ) )
+	default_Volume__percent="${array_valori_Volume__percent[1]}"
+	: default_Volume__percent
+	: max_Volume
+	: volume
+	#
+	: min_Pitch
+	: default_Pitch
+	array_valori_Pitch__percent=( $(percentualizza ${min_Pitch} ${default_Pitch} ${max_Pitch} ) )
+	default_Pitch__percent="${array_valori_Pitch__percent[1]}"
+	: default_Pitch__percent
+	: max_Pitch
+	: pitch
+	#
+	: min_Tempo
+	: default_Tempo
+	array_valori_Tempo__percent=( $(percentualizza ${min_Tempo} ${default_Tempo} ${max_Tempo} ) )
+	default_Tempo__percent="${array_valori_Tempo__percent[1]}"
+	: default_Tempo__percent
+	: max_Tempo
+	: tempo
+	#
+	funct_volume="${volume}"
+	funct_pitch="${pitch}" 
+	funct_tempo="${tempo}"
+	#
+	while :
+		do
+		#
+		array_valori_Volume__percent=( $(percentualizza ${min_Volume} ${funct_volume} ${max_Volume} ) )
+		array_valori_Tono__percent=( $(percentualizza ${min_Pitch} ${funct_pitch} ${max_Pitch} ) )
+		array_valori_Tempo__percent=( $(percentualizza ${min_Tempo} ${funct_tempo} ${max_Tempo} ) )
+		[ "${l}" = "IT" ] && menu \
+				"AVVIA LA CANZONE->" \
+				"<-(DEFAULT: ${default_Volume__percent}%,${default_Pitch__percent}%,${default_Tempo__percent}%)" \
+				"${delimiter}" \
+				"( ${array_valori_Volume__percent[1]}% ) : Volume ..." \
+				"( ${array_valori_Tono__percent[1]}% ) : Tono (${funct_pitch}) ..." \
+				"( ${array_valori_Tempo__percent[1]}% ) : Tempo ..." \
+				"${delimiter}" \
+				"<-TORNA INDIETRO"
+		#
+		[ "${l}" = "EN" ] && menu \
+				"START SONG->" \
+				"<-(DEFAULT: ${default_Volume__percent}%,${default_Pitch__percent}%,${default_Tempo__percent}%)" \
+				"${delimiter}" \
+				"( ${array_valori_Volume__percent[1]}% ) : Volume ..." \
+				"( ${array_valori_Tono__percent[1]}% ) : Pitch (${funct_pitch}) ..." \
+				"( ${array_valori_Tempo__percent[1]}% ) : Tempo ..." \
+				"${delimiter}" \
+				"<-BACK"
+		#
+		scelta_levels="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta_levels} -eq 0 ] && break
+		if [ "${scelta_levels}" = "AVVIA LA CANZONE->" -o "${scelta_levels}" = "START SONG->" ]
+			then
+			echo "${funct_volume} ${funct_pitch} ${funct_tempo}"
+			echo "unchecked"
+			break
+			#
+		elif [ "${scelta_levels}" = "<-(DEFAULT: ${default_Volume__percent}%,${default_Pitch__percent}%,${default_Tempo__percent}%)" ]
+			then
+			#echo "${funct_volume} ${funct_pitch} ${funct_tempo}"
+			echo "checked"
+			break
+			#
+		elif [ "${scelta_levels}" = "( ${array_valori_Volume__percent[1]}% ) : Volume ..." ]
+			then
+			#
+			[ "${l}" = "IT" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Per favore, \n setta il \"Volume\" \n ( predef.: ${default_Volume__percent}% ) \n ..." ${min_Volume} ${funct_volume} ${max_Volume}
+			[ "${l}" = "EN" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Please, \n adjust \"Volume\" \n ( default.: ${default_Volume__percent}% ) \n ..." ${min_Volume} ${funct_volume} ${max_Volume}
+			funct_volume="$(0< "${dir_tmp}/${file_tmp}" )"
+			continue
+			#
+		elif [ "${scelta_levels}" = "( ${array_valori_Tono__percent[1]}% ) : Tono (${funct_pitch}) ..." -o "${scelta_levels}" = "( ${array_valori_Tono__percent[1]}% ) : Pitch (${funct_pitch}) ..." ]
+			then
+			[ "${l}" = "IT" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Per favore, \n setta il \"Tono\" \n ( predef.: ${default_Pitch__percent}% ) \n ..." ${min_Pitch} ${funct_pitch} ${max_Pitch}
+			[ "${l}" = "EN" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Please, \n adjust \"Pitch\" \n ( default.: ${default_Pitch__percent}% ) \n ..." ${min_Pitch} ${funct_pitch} ${max_Pitch}
+			funct_pitch="$(0< "${dir_tmp}/${file_tmp}" )"
+			continue
+			#
+		elif [ "${scelta_levels}" = "( ${array_valori_Tempo__percent[1]}% ) : Tempo ..." ]
+			then
+			[ "${l}" = "IT" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Per favore, \n setta il \"Tempo\" \n ( predef.: ${default_Tempo__percent}% ) \n ..." ${min_Tempo} ${funct_tempo} ${max_Tempo}
+			[ "${l}" = "EN" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Please, \n adjust \"Tempo\" \n ( default.: ${default_Tempo__percent}% ) \n ..." ${min_Tempo} ${funct_tempo} ${max_Tempo}
+			funct_tempo="$(0< "${dir_tmp}/${file_tmp}" )"
+			continue
+			#
+		elif [ "${scelta_levels}" = "${delimiter}" ]
+			then
+			continue
+			#
+		elif [ "${scelta_levels}" = "<-TORNA INDIETRO" -o "${scelta_levels}" = "<-BACK" ]
+			then
+			break
+			#
+		fi
+		#
+	done
+	#
+	}
+#
+#
+#
+display_levels()
+	{
+	#
+	: min_Volume
+	: default_Volume
+	array_valori_Volume__percent=( $(percentualizza ${min_Volume} ${default_Volume} ${max_Volume} ) )
+	default_Volume__percent="${array_valori_Volume__percent[1]}"
+	: default_Volume__percent
+	: max_Volume
+	: volume
+	#
+	: min_Pitch
+	: default_Pitch
+	array_valori_Pitch__percent=( $(percentualizza ${min_Pitch} ${default_Pitch} ${max_Pitch} ) )
+	default_Pitch__percent="${array_valori_Pitch__percent[1]}"
+	: default_Pitch__percent
+	: max_Pitch
+	: pitch
+	#
+	: min_Tempo
+	: default_Tempo
+	array_valori_Tempo__percent=( $(percentualizza ${min_Tempo} ${default_Tempo} ${max_Tempo} ) )
+	default_Tempo__percent="${array_valori_Tempo__percent[1]}"
+	: default_Tempo__percent
+	: max_Tempo
+	: tempo
+	#
+	funct_volume="${volume}"
+	funct_pitch="${pitch}" 
+	funct_tempo="${tempo}"
+	#
+	while :
+		do
+		#
+		array_valori_Volume__percent=( $(percentualizza ${min_Volume} ${funct_volume} ${max_Volume} ) )
+		array_valori_Tono__percent=( $(percentualizza ${min_Pitch} ${funct_pitch} ${max_Pitch} ) )
+		array_valori_Tempo__percent=( $(percentualizza ${min_Tempo} ${funct_tempo} ${max_Tempo} ) )
+		[ "${l}" = "IT" ] && menu \
+				"RIAVVIA LA CANZONE->" \
+				"RIAVVIA LA CANZONE<-(DEFAULT: ${default_Volume__percent}%,${default_Pitch__percent}%,${default_Tempo__percent}%)" \
+				"${delimiter}" \
+				"( ${array_valori_Volume__percent[1]}% ) : Volume ..." \
+				"( ${array_valori_Tono__percent[1]}% ) : Tono (${funct_pitch}) ..." \
+				"( ${array_valori_Tempo__percent[1]}% ) : Tempo ..." \
+				"${delimiter}" \
+				"<-TORNA INDIETRO"
+		#
+		[ "${l}" = "EN" ] && menu \
+				"RESTART SONG->" \
+				"RESTART SONG<-(DEFAULT: ${default_Volume__percent}%,${default_Pitch__percent}%,${default_Tempo__percent}%)" \
+				"${delimiter}" \
+				"( ${array_valori_Volume__percent[1]}% ) : Volume ..." \
+				"( ${array_valori_Tono__percent[1]}% ) : Pitch (${funct_pitch}) ..." \
+				"( ${array_valori_Tempo__percent[1]}% ) : Tempo ..." \
+				"${delimiter}" \
+				"<-BACK"
+		#
+		scelta_levels="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta_levels} -eq 0 ] && break
+		if [ "${scelta_levels}" = "RIAVVIA LA CANZONE->" -o "${scelta_levels}" = "RESTART SONG->" ]
+			then
+			echo "${funct_volume} ${funct_pitch} ${funct_tempo}"
+			echo "unchecked"
+			break
+			#
+		elif [ "${scelta_levels}" = "RIAVVIA LA CANZONE<-(DEFAULT: ${default_Volume__percent}%,${default_Pitch__percent}%,${default_Tempo__percent}%)" -o "${scelta_levels}" = "RESTART SONG<-(DEFAULT: ${default_Volume__percent}%,${default_Pitch__percent}%,${default_Tempo__percent}%)" ]
+			then
+			#echo "${funct_volume} ${funct_pitch} ${funct_tempo}"
+			echo "checked"
+			break
+			#
+		elif [ "${scelta_levels}" = "( ${array_valori_Volume__percent[1]}% ) : Volume ..." ]
+			then
+			#
+			[ "${l}" = "IT" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Per favore, \n setta il \"Volume\" \n ( predef.: ${default_Volume__percent}% ) \n ..." ${min_Volume} ${funct_volume} ${max_Volume}
+			[ "${l}" = "EN" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Please, \n adjust \"Volume\" \n ( default.: ${default_Volume__percent}% ) \n ..." ${min_Volume} ${funct_volume} ${max_Volume}
+			funct_volume="$(0< "${dir_tmp}/${file_tmp}" )"
+			continue
+			#
+		elif [ "${scelta_levels}" = "( ${array_valori_Tono__percent[1]}% ) : Tono (${funct_pitch}) ..." -o "${scelta_levels}" = "( ${array_valori_Tono__percent[1]}% ) : Pitch (${funct_pitch}) ..." ]
+			then
+			[ "${l}" = "IT" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Per favore, \n setta il \"Tono\" \n ( predef.: ${default_Pitch__percent}% ) \n ..." ${min_Pitch} ${funct_pitch} ${max_Pitch}
+			[ "${l}" = "EN" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Please, \n adjust \"Pitch\" \n ( default.: ${default_Pitch__percent}% ) \n ..." ${min_Pitch} ${funct_pitch} ${max_Pitch}
+			funct_pitch="$(0< "${dir_tmp}/${file_tmp}" )"
+			continue
+			#
+		elif [ "${scelta_levels}" = "( ${array_valori_Tempo__percent[1]}% ) : Tempo ..." ]
+			then
+			[ "${l}" = "IT" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Per favore, \n setta il \"Tempo\" \n ( predef.: ${default_Tempo__percent}% ) \n ..." ${min_Tempo} ${funct_tempo} ${max_Tempo}
+			[ "${l}" = "EN" ] && adjust $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) "Please, \n adjust \"Tempo\" \n ( default.: ${default_Tempo__percent}% ) \n ..." ${min_Tempo} ${funct_tempo} ${max_Tempo}
+			funct_tempo="$(0< "${dir_tmp}/${file_tmp}" )"
+			continue
+			#
+		elif [ "${scelta_levels}" = "${delimiter}" ]
+			then
+			continue
+			#
+		elif [ "${scelta_levels}" = "<-TORNA INDIETRO" -o "${scelta_levels}" = "<-BACK" ]
+			then
+			break
+			#
+		fi
+		#
+	done
+	#
+	}
+#
+#
+#
+display_channels()
+	{
+	: muted_channels
+	if [ "${muted_channels}" = "NONE" ]
+		then
+		init_channels=( $(for (( i=1 ; i<=32 ; i++ )) 
+					do
+					echo "off"
+				done ) )
+	elif [ "${muted_channels}" = "ALL" ]
+		then
+		init_channels=( $(for (( i=1 ; i<=32 ; i++ )) 
+					do
+					echo "on"
+				done ) )
+	else
+		init_channels=( $(for (( i=1 ; i<=32 ; i++ )) 
+					do
+					echo "off"
+				done ) )
+		muted_channels_list="$(echo "${muted_channels}" | tr ',' '\n' )"
+		for channel_to_mute in ${muted_channels_list}
+			do
+			c=$(( ${channel_to_mute} - 1 ))
+			eval init_channels[${c}]=on
+		done
+	fi
+	#
+	eval list -w 415 -h 795 $(if [ "${muted_channels}" = "ALL" ]
+					then
+					echo -n "-\"Tutti i canali : clicca per TOGLIERE il silenzio\" "
+				else
+					echo -n "-\"Tutti i canali : clicca per silenziarli tutti\" "
+				fi ) $(for (( i=0,index=1 ; index <= 32 ; i++,index++ ))
+						do
+						echo -n "$(if [ "${init_channels[${i}]}" = "on" ]
+								then
+								echo -n "+"
+							elif [ "${init_channels[${i}]}" = "off" ]
+								then
+								echo -n "-"
+							fi )"
+						echo -n "$(if [ "${l}" = "IT" ]
+								then
+								echo "\"Canale ${index}: clicca per silenziare\" "
+							elif [ "${l}" = "EN" ]
+								then
+								echo "\"Channel ${index}: check to mute\" "
+							fi )"
+					done )
+	#
+	}
+#
+#
+#
+go_bk__levels()
+	{
+	#
+	: default_Volume
+	: default_Pitch
+	: default_Tempo
+	#
+	continua="SI"
+	while [ "${continua}" = "SI" ]
+		do
+		#
+		go_bk & 
+		pid__go_bk=${!}
+		#
+		levels_pre="$(display_levels )" ; [ ${#levels_pre} -eq 0 ] && continua="NO" || continua="SI"
+		clean_temp
+		#
+		[ "${karaoke_window}" = "true" ] && kill ${pid__go_bk} || killall timidity ; wait
+		#
+		#############################################
+		# Ma con quali livelli? ...
+		if [ ${#levels_pre} -eq 0 ]
+			then
+			export volume="${default_Volume}"
+			export pitch="${default_Pitch}"
+			export tempo="${default_Tempo}"
+		else
+			# _c'e'_ effettivam. qualcosa in "${levels_pre}" ...
+			if [ $(echo "${levels_pre}" | grep "unchecked" | wc -c ) -gt 0 ]
+				then
+				# NON vuole tornare ai valori di default...
+				levels=( $(echo "${levels_pre}" | head -n 1 ) ) #prendo solo la prima riga...
+				if [ ${#levels} -eq 0 ]
+					then
+					# se non c'e' nulla, torno ai valori di default...
+					export volume="${default_Volume}"
+					export pitch="${default_Pitch}"
+					export tempo="${default_Tempo}"
+				else
+					# altrimenti...
+					export volume=${levels[0]}
+					export pitch=${levels[1]}
+					export tempo=${levels[2]}
+				fi
+			elif [ $(echo "${levels_pre}" | grep "checked" | wc -c ) -gt 0 ]
+				then
+				# VUOLE ritornare ai valori di default...
+				export volume="${default_Volume}"
+				export pitch="${default_Pitch}"
+				export tempo="${default_Tempo}"
+			fi
+		fi
+		#############################################
+		#
+	done
+	}
+#
+#
+#
+go_bk__channels()
+	{
+	#
+	continua="SI"
+	while [ "${continua}" = "SI" ]
+		do
+		#
+		go_bk &
+		pid__go_bk=${!}
+		#
+		channels_pre="$(display_channels 
+				click=${?}
+				scelte="$(0< "${dir_tmp}/${file_tmp}" )"
+				scelte_con_checked_unchecked="$(echo -e "${scelte}" ; \
+							if [ $(echo -n "${scelte}" | grep "Tutti i canali" | wc -c ) -gt 0 ]
+								then
+								echo "checked"
+							else
+								echo "unchecked"
+							fi )"
+				echo "${scelte_con_checked_unchecked}" | cut -d ':' -f 1
+				echo -e "\n\n\n${click}" 
+				)"
+		#
+		#message "Questo e' il contenuto di \${channels_pre}:\n\"$(echo "${channels_pre}" )\"\n ..."
+		#
+		# "Channel 1
+		#  Channel 2
+		#  Channel 3
+		#  ...
+		#  ..."
+		click="$(echo "${channels_pre}" | tail -n 1 )"
+		if [ ${#click} -eq 0 ]
+			then
+			continua="NO"
+		else
+			if [ ${click} -eq 0 ]
+				then
+				#
+				continua="SI"
+				#
+			elif [ ${click} -eq 1 ]
+				then
+				#
+				continua="NO"
+				#
+			else
+				#
+				continua="NO"
+				#
+			fi
+		fi
+		clean_temp
+		[ "${karaoke_window}" = "true" ] && kill ${pid__go_bk} || killall timidity
+		wait
+		#
+		if [ ${#channels_pre} -eq 0 ]
+			then
+			export muted_channels="NONE"
+		else
+			if [ $(echo "${channels_pre}" | grep "unchecked" | wc -c ) -gt 0 ]
+				then
+				channels="$(echo "${channels_pre}" | grep -E "(Canale|Channel)" | cut -d ' ' -f 2 | tr '\n' ',' | gsed s\#',$'#'\n'# )"
+				if [ ${#channels} -eq 0 ]
+					then
+					export muted_channels="NONE"
+				else
+					export muted_channels="${channels}"
+				fi
+			elif [ $(echo "${channels_pre}" | grep "checked" | wc -c ) -gt 0 ]
+				then
+				if [ "${muted_channels}" = "ALL" ]
+					then
+					export muted_channels="NONE"
+				else
+					export muted_channels="ALL"
+				fi
+			fi
+		fi
+		#
+	done
+	}
+#
+#
+#
+go_bk__levels_channels()
+	{
+	#
+	continua="SI"
+	prima_volta="SI"
+	while [ "${continua}" = "SI" ]
+		do
+		#
+		if [ "${prima_volta}" = "SI" ]
+			then
+			[ "${l}" = "IT" ] && message "Per favore, \n setta i livelli..."
+			[ "${l}" = "EN" ] && message "Please, \n set levels..."
+			#
+			prima_volta="NO"
+		fi
+		#
+		levels_pre="$(display_levels_pre )"
+		#
+		if [ ${#levels_pre} -eq 0 ]
+			then
+			clean_temp
+			break 1
+		else
+			if [ $(echo "${levels_pre}" | grep "unchecked" | wc -c ) -gt 0 ]
+				then
+				levels=( $(echo "${levels_pre}" | head -n 1 ) )
+				if [ $(echo -n "${levels}" | wc -c ) -eq 0 ]
+					then
+					export volume="${default_Volume}"
+					export pitch="${default_Pitch}"
+					export tempo="${default_Tempo}"
+				else
+					export volume=${levels[0]}
+					export pitch=${levels[1]}
+					export tempo=${levels[2]}
+				fi
+			elif [ $(echo "${levels_pre}" | grep "checked" | wc -c ) -gt 0 ]
+				then
+				export volume="${default_Volume}"
+				export pitch="${default_Pitch}"
+				export tempo="${default_Tempo}"
+				continue 1
+			fi
+		fi
+		#
+		go_bk & 
+		pid__go_bk=${!}
+		#
+		channels_pre="$(display_channels
+				click=${?}
+				scelte="$(0< "${dir_tmp}/${file_tmp}" )"
+				scelte_con_checked_unchecked="$(echo -e "${scelte}" ; \
+							if [ $(echo -n "${scelte}" | grep "Tutti i canali" | wc -c ) -gt 0 ]
+								then
+								echo "checked"
+							else
+								echo "unchecked"
+							fi )"
+				echo "${scelte_con_checked_unchecked}" | cut -d ':' -f 1
+				echo -e "\n\n\n${click}" 
+				)"
+		click="$(echo "${channels_pre}" | tail -n 1 )"
+		if [ ${#click} -eq 0 ]
+			then
+			continua="NO"
+		else
+			if [ ${click} -eq 0 ]
+				then
+				#
+				continua="SI"
+				#
+			elif [ ${click} -eq 1 ]
+				then
+				#
+				continua="NO"
+				#
+			else
+				#
+				continua="NO"
+				#
+			fi
+		fi
+		clean_temp
+		[ "${karaoke_window}" = "true" ] && kill ${pid__go_bk} || killall timidity
+		wait
+		#
+		if [ ${#channels_pre} -eq 0 ]
+			then
+			export muted_channels="NONE"
+		else
+			if [ $(echo "${channels_pre}" | grep "unchecked" | wc -c ) -gt 0 ]
+				then
+				channels="$(echo "${channels_pre}" | grep -E "(Canale|Channel)" | cut -d ' ' -f 2 | tr '\n' ',' | gsed s\#',$'#'\n'# )"
+				if [ ${#channels} -eq 0 ]
+					then
+					export muted_channels="NONE"
+				else
+					export muted_channels="${channels}"
+				fi
+			elif [ $(echo "${channels_pre}" | grep "checked" | wc -c ) -gt 0 ]
+				then
+				if [ "${muted_channels}" = "ALL" ]
+					then
+					export muted_channels="NONE"
+				else
+					export muted_channels="ALL"
+				fi
+			fi
+		fi
+		#
+	done
+	}
+#
+#
+#
+go_bk()
+	{
+	xterm_bk()
+		{
+		#
+		exec xterm -cr "${background}" -xrm 'xterm*cursorUnderLine: true' -xrm "xterm*allowWindowOps: true" -title "$(basename "${0}"): $(basename "${midi}" | iconv -f "${char_encoding}" ) (${extract_way}#$(basename "${sf}" ))" -bg "${background}" -fg "${foreground_1}" -fn "${font}" -geometry ${columns}x3+20+400 -e "${bkcore}" "${midi}"
+		}
+	nude_bk()
+		{
+		#
+		if [ ${#soundfont} -gt 0 ]
+			then
+			export soundfont_string="-x\"soundfont ${soundfont}\""
+		else
+			export soundfont_string=""
+		fi
+		: soundfont_string
+		#
+		: muted_channels
+		if [ "${muted_channels}" = "NONE" ]
+			then
+			channel_exclude_string=""
+		elif [ "${muted_channels}" = "ALL" ]
+			then
+			channel_exclude_string="-Q0"
+		else
+			channel_exclude_string="-Q${muted_channels}"
+		fi
+		: channel_exclude_string
+		#
+		: spectrogram_window
+		if [ "${spectrogram_window}" = "false" ]
+			then
+			spectrogram_string=""
+		elif [ "${spectrogram_window}" = "true" ]
+			then
+			spectrogram_string="-g0.1"
+		fi
+		: spectrogram_string
+		#
+		: volume
+		: tempo
+		: pitch
+		: midi
+		#
+		if [ "${levels_window}" = "true" -o "${channels_window}" = "true" ]
+			then
+			clean_temp
+			eval timidity ${soundfont_string} ${channel_exclude_string} ${spectrogram_string} -A${volume} --volume-compensation -T${tempo} -K${pitch} -idqqqt \"${midi}\" 1> /dev/null
+		else
+			continua="SI"
+			while [ "${continua}" = "SI" ]
+				do
+				#
+				eval timidity ${soundfont_string} ${channel_exclude_string} ${spectrogram_string} -A${volume} --volume-compensation -T${tempo} -K${pitch} -idqqqt \"${midi}\" &
+				#
+				#[ "${l}" = "IT" ] && nudewindow="$(Xdialog --stdout ${rc} --ok-label "Riavvia canzone" --cancel-label "Esci" --title "$(basename "${0}")" ${icona_BK} --yesno "Riproduzione di\n$(basename "${midi}" )" "${dimensione_finestra_1}" "${dimensione_finestra_2}" ; click=${?} ; echo -e "\n\n\n${click}" )"
+				[ "${l}" = "IT" ] && nudewindow="$(question "Riproduzione di \n $(basename "${midi}" ) \n ... \n\n\n Riavvio \n la canzone ?" ; \
+				click=${?} ; echo -e "\n\n\n${click}" )"
+				#
+				#[ "${l}" = "EN" ] && nudewindow="$(Xdialog --stdout ${rc} --ok-label "Restart song" --cancel-label "Quit" --title "$(basename "${0}")" ${icona_BK} --yesno "Playing\n$(basename "${midi}" )" "${dimensione_finestra_1}" "${dimensione_finestra_2}" ; click=${?} ; echo -e "\n\n\n${click}" )"
+				[ "${l}" = "IT" ] && nudewindow="$(question "Playing \n $(basename "${midi}" ) \n ... \n\n\n Restart \n song ?" ; \
+				click=${?} ; echo -e "\n\n\n${click}" )"
+				#
+				click="$(echo "${nudewindow}" | tail -n 1 )"
+				if [ ${click} -eq 0 ]
+					then
+					#
+					continua="SI"
+					#
+				elif [ ${click} -eq 1 ]
+					then
+					#
+					continua="NO"
+					#
+				else
+					#
+					continua="NO"
+					#
+				fi
+				clean_temp
+				killall timidity
+				wait
+			done
+		fi
+		#
+		}
+	#
+	###########
+	#############################
+	################################
+	if [ "${karaoke_window}" = "true" ]
+		then
+		xterm_bk
+	elif [ "${karaoke_window}" = "false" ]
+		then
+		nude_bk
+	fi
+	################################
+	#############################
+	###########
+	#
+	}
+#
+#
+#
+crea_database()
+	{
+	extensions=( ${extensions_var} )
+	#
+	while :
+		do
+		[ "${l}" = "IT" ] && message "Prego, \n seleziona \n la directory \n delle canzoni..."
+		[ "${l}" = "EN" ] && message "Please, \n select \n songs directory..."
+		#
+		dselect ; dir_canzoni="$(0< "${dir_tmp}/${file_tmp}" )" && if_arg_is_an_empty_variable_then_exit "dir_canzoni"
+		#
+		if [ -d "${dir_canzoni}" ]
+			then
+			: dir_canzoni
+		else
+			[ "${l}" = "IT" ] && alert_message "Errore: \n non e' una directory."
+			[ "${l}" = "EN" ] && alert_message "Error: \n it's not a directory."
+			continue
+		fi
+		#
+		if [ "${l}" = "IT" ]
+			then 
+			question "La dir. scelta e': \n$(echo "${dir_canzoni}" | gsed s\#'/'#'\n/'#g ) \n\n Continuo?"
+			risposta=${?}
+		elif [ "${l}" = "EN" ]
+			then
+			question "Selected dir. is: \n$(echo "${dir_canzoni}" | gsed s\#'/'#'\n/'#g ) \n\n Continue?"
+			risposta=${?}
+		fi
+		if [ ${risposta} -eq 0 ]
+			then
+			break
+		elif [ ${risposta} -eq 1 ]
+			then
+			continue
+		else
+			ciao
+		fi
+	done
+	#
+	if [ -f "${database}" ]
+		then
+		mv "${database}" "${database}_OLD"
+	fi
+	#
+	####
+	####
+	#
+	[ "${l}" = "IT" ] && wait_for "Controllo \n le canzoni presenti..."
+	[ "${l}" = "EN" ] && wait_for "Checking \n songs..."
+	#
+	##
+	#
+	IFS=$'\n' ; array_canzoni=( $(find "${dir_canzoni}" -type f 2>/dev/null | \
+						iconv -f "${char_encoding}" | \
+						grep -Ei "($(for (( index=0 ; index < ${#extensions[@]} ; index++ ))
+								do
+								echo -n "${extensions[${index}]}$|"
+							done | gsed s\#'.$'#''# ))" | \
+						sort ) ) ; IFS=$' \t\n'
+	#
+	if [ ${#array_canzoni[@]} -eq 0 ]
+		then
+		IFS=$'\n' ; array_canzoni=( $(find "${dir_canzoni}" -type f 2>/dev/null | \
+						grep -Ei "($(for (( index=0 ; index < ${#extensions[@]} ; index++ ))
+								do
+								echo -n "${extensions[${index}]}$|"
+							done | gsed s\#'.$'#''# ))" | \
+						sort ) ) ; IFS=$' \t\n'
+	fi
+	#
+	##
+	#
+	terminate_wait_for
+	#
+	####
+	####
+	#
+	: array_canzoni[@]
+		{
+		for (( index=0 ; index < ${#array_canzoni[@]} ; index++ ))
+			do
+			#
+			path_canzone="$(echo "${array_canzoni[${index}]}" | gsed s\#"^${HOME}"#'~'# )"
+			#
+			####
+			######
+			eval array_dati_database[${index}]=\"${path_canzone}\"
+			######
+			####
+			#
+			echo "PROGRESS"
+			#
+		done
+		#
+		##
+		#
+		[ "${l}" = "IT" ] && wait_for "Inizializzazione \n del database (1)..."
+		[ "${l}" = "EN" ] && wait_for "Database \n initializing (1)..."
+		# fase a) :
+		echo "[Bash!Karaoke Database]" 1> "${database}"
+		dati_database="$(for (( index=0 ; index < ${#array_dati_database[@]} ; index++ ))
+					do
+					# Old database composed by file path only:
+					#echo "${array_dati_database[${index}]}"
+					#
+					# Current database:
+					# id="""num.progressivo""", path="""/path/to/file.kar""", title="""Canzone stupenda""", artist="""Cantante Stonatissimo""", info="""Futili informazioni sulla canzone""", duration="""159""", completed="""false"""
+					#echo "id=\"\"\"${index}\"\"\", path=\"\"\"${array_dati_database[${index}]}\"\"\", title=\"\"\"\"\"\", artist=\"\"\"\"\"\", info=\"\"\"\"\"\", duration=\"\"\"\"\"\"", completed=\"\"\"false\"\"\"
+					echo -e "id=${index}\tpath=${array_dati_database[${index}]}\ttitle=\tartist=\tinfo=\tduration=\tcompleted=false\t"
+					#
+				done )"
+		# fase b) :
+		echo "${dati_database}" 1>> "${database}"
+		#
+		terminate_wait_for
+		#
+		##
+		#
+		} | \
+			progress "$(if [ "${l}" = "IT" ]; 
+						then
+						echo "Creazione \n del database \n di ${#array_canzoni[@]} canzoni..."
+					elif [ "${l}" = "EN" ]
+						then
+						echo "${#array_canzoni[@]} songs \n database \n creation..."
+					fi 
+					)" "${#array_canzoni[@]}"
+	#
+	##
+	#
+	[ "${l}" = "IT" ] && wait_for "Database \n initializing (2)..."
+	[ "${l}" = "EN" ] && wait_for "Inizializzazione \n del database (2)..."
+	#var_database="$(cat "${database}" )"
+	#var_database="$(gsed -n s\#'^.*path="""\(.*\)""", title=.*$'#'\1'#p 0< "${database}" )"
+	var_database="$(gsed -n s\#'^.*path=\(.*\)\ttitle=.*$'#'\1'#p 0< "${database}" )"
+	sleep 1
+	terminate_wait_for
+	#
+	}
+#
+#
+#
+scrivi_riga_nel_database()
+	{
+	# id="""num.progressivo""", path="""/path/to/file.kar""", title="""Canzone stupenda""", artist="""Cantante Stonatissimo""", info="""Futili informazioni sulla canzone""", duration="""159""", completed="""false"""
+	#
+	# scrivi_riga_nel_database "id" "path" "title" "artist" "info" "duration" "completed"
+	id="${1}"
+	path="${2}"
+	title="${3}"
+	artist="${4}"
+	info="${5}"
+	duration="${6}"
+	completed="${7}"
+	#############
+	#
+	#
+	#
+	#############
+	# id analyzing...
+	if [ $(echo "${id}" | tr -dc [[:digit:]] | wc -c) -eq 0 ]
+		then
+		alert_message "Error. \n Incorrect id: \n \"${id}\" \n ..."
+		return
+	fi
+	#
+	#############
+	# path analizing...
+	#
+	# 1) files in same directory...
+	[ "$(dirname "${path}" )" = "." ] && path="${PWD}/${2}"
+	#
+	# 2) files not existing...
+	if [ ! -f "${path}" ]
+		then
+		alert_message "Error. \n Incorrect path: \n \"${path}\" \n ..."
+		return
+	fi
+	#
+	# 3) let's substitute "~" character...
+	path="$(echo "${path}" | gsed s\#"^${HOME}"#'~'# )"
+	#############
+	#
+	gsed s\#"^\(id=${id}\tpath=.*\)$"#"id=${id}\tpath=${path}\ttitle=${title}\tartist=${artist}\tinfo=${info}\tduration=${duration}\tcompleted=${completed}\t"# 0< "${database}" 1> "${database}_TEMP"
+	mv "${database}_TEMP" "${database}"
+	#
+	}
+#
+#
+#
+estrai_dal_database()
+	{
+	#
+	#######################
+	#
+	var_crea_database="NO"
+	#
+	if [ ! -f "${database}" ]
+		then
+		[ "${l}" = "IT" ] && alert_message "Attenzione: \n il file \n del database \n non esiste..."
+		[ "${l}" = "EN" ] && alert_message "Database \n file \n doesn't exist..."
+		var_crea_database="SI"
+	else
+		if [ $(wc -l 0< "${database}" ) -eq 0 ]
+			then
+			[ "${l}" = "IT" ] && alert_message "Attenzione: database vuoto..."
+			[ "${l}" = "EN" ] && alert_message "Database is empty..."
+			var_crea_database="SI"
+		fi
+	fi
+	#
+	if [ "${var_crea_database}" = "SI" ]
+		then
+		if [ "${l}" = "IT" ]
+			then 
+			question "Per fare la ricerca rapida \n serve un database aggiornato... \n\n Vuoi creare \n il database \n delle canzoni?"
+			risposta="${?}"
+		elif [ "${l}" = "EN" ]
+			then 
+			question "For quick search \n I need an up-to-date \n database...  \n\n Do you want \n create \n the song database?"
+			risposta="${?}"
+		fi
+		if [ ${risposta} -eq 0 ]
+			then
+			crea_database
+		elif [ ${risposta} -eq 1 ]
+			then
+			[ "${l}" = "IT" ] && alert_message "OK. \n Ma NON posso fare \n la ricerca rapida \n delle canzoni..."
+			[ "${l}" = "EN" ] && alert_message "OK. \n But I can NOT \n quick search \n songs..."
+			return
+		else
+			ciao
+		fi
+	fi
+	#
+	#######################
+	#
+	while :
+		do
+		#
+		##
+		#
+		#[ "${l}" = "IT" ] && input $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) 1 "Artista/Canzone - es. \"M?dugno\", o \"m?gno/nel?blu\""
+		#[ "${l}" = "EN" ] && input $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) 1 "Artist/Song - e.g. \"Be?tles\", or \"beatl?s/com?gether\""
+		[ "${l}" = "IT" ] && input $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) 1 "Artista/Canzone - es. 'M?dugno', o 'm?gno/nel?blu'"
+		[ "${l}" = "EN" ] && input $([ "${mode}" = "Xdialog" ] && echo -en "-h 550 " ) 1 "Artist/Song - e.g. 'Be?tles', or 'beatl?s/com?gether'"
+		#
+		artista_titolo="$(tr -c '[[:alnum:]]' '?' 0< "${dir_tmp}/${file_tmp}" |  gsed s\#'\?'#'\.\*'#g )" ; [ "${artista_titolo}" = ".*" ] && clean_temp && exit 0
+		#
+		##
+		#
+		[ "${mode}" = "dialog" ] || [ "${l}" = "IT" ] && wait_for "Ricerca nel database \n in corso..."
+		[ "${mode}" = "dialog" ] || [ "${l}" = "EN" ] && wait_for "Database searching..."
+		#
+		lista="$(echo "${var_database}" | gsed -n "\#${artista_titolo}#Ip" | gsed s\#"^${HOME}"#'~'# )"
+		: lista
+		#
+		IFS=$'\n' ; array_lista=( ${lista} ) ; IFS=$' \t\n'
+		: array_lista[@]
+		#
+		[ "${mode}" = "dialog" ] || terminate_wait_for
+		#
+		if [ ${#array_lista[@]} -eq 0 ]
+			then
+			[ "${mode}" = "dialog" ] || [ "${l}" = "IT" ] && alert_message "Mi dispiace: \n nessuna canzone trovata \n con quella parola chiave..."
+			[ "${mode}" = "dialog" ] || [ "${l}" = "EN" ] && alert_message "Sorry: \n no song found \n with that key word..."
+			continue
+		else
+			break
+		fi
+	done
+	#
+	if [ ${#array_lista[@]} -eq 1 ]
+		then
+		scelta="${array_lista[0]}"
+		echo "${scelta}" 1> "${dir_Karaoke}/${lista_karaoke}" &
+		:
+	else
+		[ "${mode}" = "dialog" ] || [ "${l}" = "IT" ] && wait_for "Creazione della lista \n in corso..."
+		[ "${mode}" = "dialog" ] || [ "${l}" = "EN" ] && wait_for "List creating..."
+		#
+		echo "${lista}" 1> "${dir_Karaoke}/${lista_karaoke}" &
+		#
+		scelte="$(for (( index=0 ; index < ${#array_lista[@]} ; index++ )); do echo -ne "\"$(echo "${array_lista[${index}]}" | tr -c '[a-z][A-Z][:digit:][:punct:][:blank:][:space:]' '?' )\"\t" ; done )"
+		#
+		[ "${mode}" = "dialog" ] || terminate_wait_for
+		#
+		: > "${dir_tmp}/${file_tmp}"
+		IFS=$'\t' ; eval menu ${scelte} ; IFS=$' \t\n'
+		scelta="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta} -eq 0 ] && return
+		#
+	fi
+	#
+	if [ -f "$(echo "${scelta}" | gsed s\#"^~"#"${HOME}"# )" ]
+		then
+		#
+		: scelta
+		#
+		##
+		####
+		path_canzone_pre="${scelta}"
+		####
+		##
+		#
+		path_canzone="$(echo "${path_canzone_pre}" | gsed s\#"^~"#"${HOME}"# )"
+		#
+	else
+		#
+		scelta="$(echo "${scelta}" | gsed s\#'?'#'.\\?'#g )"
+		#
+		##
+		####
+		path_canzone_pre="$(associazione_path "${scelta}" )"
+		####
+		##
+		#
+		path_canzone="$(echo "${path_canzone_pre}" | gsed s\#"^~"#"${HOME}"# )"
+		#
+	fi
+	#
+	echo "${path_canzone}"
+	#
+	}
+#
+#
+#
+associazione_path()
+	{
+	#
+	scelta="${1}"
+	#
+	[ "${mode}" = "dialog" ] || [ "${l}" = "IT" ] && wait_for "Associazione del path..."
+	[ "${mode}" = "dialog" ] || [ "${l}" = "EN" ] && wait_for "Path retrieving..."
+	IFS=$'\n' && array_path=( $(echo "${var_database}" | cut -f 2 | gsed -n "\#${scelta}#Ip" ) ) && IFS=$' \t\n'
+	while :
+		do
+		if [ ${#array_path[@]} -eq 0 ]
+			then
+			sleep 1
+			[ "${mode}" = "dialog" ] || terminate_wait_for
+			sleep 1
+			[ "${mode}" = "dialog" ] || [ "${l}" = "IT" ] && alert_message "Nessun path \n trovato \n con la var.: \"\${scelta}\" ..."
+			[ "${mode}" = "dialog" ] || [ "${l}" = "EN" ] && alert_message "No path \n found \n with var.: \"\${scelta}\" ..."
+			exit 1
+		elif [ ${#array_path[@]} -eq 1 ]
+			then
+			# Associazione di "${scelta}" ad un vero e proprio path del file-system...
+			#
+			IFS=$'\n'
+			array_path_canzone=( $(echo "${array_path[0]}" | tr -c '[a-z][A-Z][:digit:][:punct:][:blank:]' '\n' ) )
+			IFS=$' \t\n'
+			#
+			##
+			####
+			path_canzone_pre="$(for (( index=0 ; index < ${#array_path_canzone[@]} ; index++ ))
+							do
+							echo -n "\"${array_path_canzone[${index}]}\"?"
+						done | \
+						gsed s\#'[[:space:]]\+'#'"*"'#g | \
+						gsed -n s\#'\(.*\)?$'#'\1'#p 
+						)"
+			path_canzone="$(echo "${path_canzone_pre}" | gsed s\#'^"~'#"\"${HOME}"# )"
+			####
+			##
+			#
+			risultato_ls=$(eval ls "${path_canzone}" 2>/dev/null | wc -l )
+			if [ ${risultato_ls} -eq 0 ]
+				then
+				sleep 1
+				[ "${mode}" = "dialog" ] || terminate_wait_for
+				sleep 1
+				[ "${mode}" = "dialog" ] || [ "${l}" = "IT" ] && alert_message "Non sono riuscito \n ad associare un path \n alla var.: \n \"\${path_canzone}\" \n ($(basename "${path_canzone}" )) \n..."
+				[ "${mode}" = "dialog" ] || [ "${l}" = "EN" ] && alert_message "I couldn't \n refer a path \n to var.:\n \"\${path_canzone}\" \n ($(basename "${path_canzone}" )) \n..."
+				exit 1
+			elif [ ${risultato_ls} -eq 1 ]
+				then
+				sleep 1
+				[ "${mode}" = "dialog" ] || terminate_wait_for # Questo e' quello che va' a terminare il wait_for proprio quando e' andato tutto bene...
+				path_canzone="$(eval ls "${path_canzone}" )"
+				break
+				#
+			elif [ ${risultato_ls} -gt 1 ]
+				then
+				IFS=$'\n' && array_path=( $(eval ls "${path_canzone}" ) ) && IFS=$' \t\n'
+				[ "${mode}" = "dialog" ] || [ "${l}" = "IT" ] && alert_message "\"ls\" mi da' \n PIU' di un path... \n\n Clicca <OK> \n per scegliere..."
+				[ "${mode}" = "dialog" ] || [ "${l}" = "EN" ] && alert_message "\"ls\" gives \n MORE than one path... \n\n Select \n <OK> button \n to choose..."
+				continue # In pratica vai a: "elif [ ${#array_path[@]} -gt 1 ]"
+			fi
+			#
+		elif [ ${#array_path[@]} -gt 1 ]
+			then
+			scelte="$(for (( index=0 ; index < ${#array_path[@]} ; index++ )); do echo -ne "\"${array_path[${index}]}\"\t" ; done )"
+			IFS=$'\t' && eval menu ${scelte} && IFS=$' \t\n'
+			scelta="$(0< "${dir_tmp}/${file_tmp}" )"
+			if [ $(echo -n "${scelta}" | wc -c ) -eq 0 ]
+				then
+				sleep 1
+				[ "${mode}" = "dialog" ] || terminate_wait_for
+				exit
+			fi
+			# Se invece: [ $(echo -n "${scelta}" | wc -c ) -gt 0 ] ...
+			IFS=$'\n' && array_path=( $(echo "${var_database}" | cut -f 2 | gsed -n "\#${scelta}#Ip" ) ) && IFS=$' \t\n'
+			continue
+		fi
+		#
+	done
+	#
+	echo "${path_canzone}"
+	}
+#
+#
+#
+extract_song_lyric()
+	{
+	#
+	local midi="${1}"
+	#
+	[ "${l}" = "IT" ] && wait_for "Attendere prego..."
+	[ "${l}" = "EN" ] && wait_for "Please wait..."
+	sleep 1
+	testo_canzone="$("${bk_extractor}" "${midi}" 2> /dev/null )"
+	righe_canzone=$(echo "${testo_canzone}" | wc -l | tr -dc '[[:digit:]]' )
+	terminate_wait_for
+	# Note: only "kdialog" and "zenity" support international chars :(  ...
+	echo -e "${testo_canzone}" | text
+	#xterm -cr "${background}" -xrm 'xterm*cursorUnderLine: true' -xrm "xterm*allowWindowOps: true" -title "$(basename "${0}"): $(basename "${midi}" | iconv -f "${char_encoding}" ) -> lyric" -bg "black" -fg "blue" -fn "${font}" -geometry $(( ${columns} * 2 ))x$(( ${righe_canzone} / 2 ))+20+400 -e "less \"${dir_tmp}/${file_tmp}\""
+	chiusura_finestra="${?}" ; [ ${chiusura_finestra} -ne 0 ] && return
+	#
+	if [ "${l}" = "IT" ]
+		then 
+		question "Vuoi salvare \n il testo \n della canzone \n ?"
+		risposta=${?}
+	elif [ "${l}" = "EN" ]
+		then
+		question "Do you want \n save \n song lyric \n ?"
+		risposta=${?}
+	fi
+	if [ ${risposta} -eq 0 ]
+		then
+		dselect ; dir_testo="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#dir_testo} -eq 0 ] && continue 1
+		#
+		[ "${l}" = "IT" ] && wait_for "Attendere prego..."
+		[ "${l}" = "EN" ] && wait_for "Please wait..."
+		basename_midi="$(basename "${midi}" )"
+		file_testo="${basename_midi%.*}.txt"
+		echo "${testo_canzone}" 1> "${dir_testo}/${file_testo}"
+		sleep 1
+		terminate_wait_for
+		[ "${l}" = "IT" ] && ok_message "Salvato in \n ${dir_testo} \n ..."
+		[ "${l}" = "EN" ] && ok_message "Saved in \n ${dir_testo} \n ..."
+		#
+	elif [ ${risposta} -eq 1 ]
+		then
+		unset testo_canzone
+		:
+	else
+		ciao
+	fi
+	}
+#
+#
+#
+outputta_bkXbuc()
+	{
+	cat <<-BLOCCO_bkXbuc_1
+<?xml version="1.0"?>
+<config>
+	<global var="BK_VERSION_NUMBER" code="echo ${BK_VERSION_NUMBER}" />
+	<global var="dir_Karaoke" code="echo ${dir_Karaoke}" /> 
+	<global var="rc_file" code="echo ${rc_file}" />
+	<global var="bk_gtk_binary" code="echo ${bk_gtk_binary}" />
+	<global var="extensions" code="echo ${extensions_var}" /> 
+	<global var="database" code="echo ${database}" /> 
+	<global var="lista_karaoke" code="echo ${lista_karaoke}" />
+	<global var="log_file" code="echo ${log_file}" />
+	<global var="timidity_log_file" code="echo ${timidity_log_file}" />
+	<global var="l" code="echo ${l}" />
+	<global var="black_icon" code="echo ${black_icon}" />
+	<global var="red_icon" code="echo ${red_icon}" />
+	<global var="green_icon" code="echo ${green_icon}" />
+	<global var="yellow_icon" code="echo ${yellow_icon}" />
+	<global var="blue_icon" code="echo ${blue_icon}" />
+	<global var="magenta_icon" code="echo ${magenta_icon}" />
+	<global var="cyan_icon" code="echo ${cyan_icon}" />
+	<global var="white_icon" code="echo ${white_icon}" />
+	<global var="font" code="echo ${font}" />
+	<global var="columns" code="echo ${columns}" />
+	
+	<global var="ORIG" code="echo ${dir_Karaoke}/${rc_file}" />
+	<global var="TEMP" code="echo ${dir_Karaoke}/${rc_file}_TEMP" /> 
+	<global var="TEMP1" code="echo ${dir_Karaoke}/${rc_file}_TEMP1" /> 
+	<global var="TEMP2" code="echo ${dir_Karaoke}/${rc_file}_TEMP2" /> 
+	<global var="delim" code="echo =============================" />
+	<global var="dbg" code="echo ${default_background}" />
+	<global var="dfg1" code="echo ${default_foreground_1}" />
+	<global var="dfg2" code="echo ${default_foreground_2}" />
+	<global var="dff" code="echo ${default_font_family}" />
+	<global var="dv" code="echo ${default_Volume}" />
+	<global var="dp" code="echo ${default_Pitch}" />
+	<global var="dt" code="echo ${default_Tempo}" />
+	
+	
+	<img src="${buc_BK_icon}" align="center"/>
+
+	
+BLOCCO_bkXbuc_1
+	cat <<-'BLOCCO_bkXbuc_2'
+	
+	<tab><title>[ "${l}" = "IT" ] && echo "Suona" ; [ "${l}" = "EN" ] && echo "Play"</title>
+		<hlayout>
+			<label>
+				<code>
+				[ "${l}" = "IT" ] && echo "RICERCA il midi nel database..."
+				[ "${l}" = "EN" ] && echo "SEARCH midi in database..."
+				</code>
+			</label>
+			<text var="stringa_da_cercare">
+				<code>
+				[ "${l}" = "IT" ] && echo "Artista/Canzone - es. m?dugno/nel?blu"
+				[ "${l}" = "EN" ] && echo "Artist/Song - e.g. beatl?s/com?gether"
+				</code>
+			</text>
+			<button>
+				<text>
+				[ "${l}" = "IT" ] && echo "ricerca"
+				[ "${l}" = "EN" ] && echo "search"
+				</text>
+				<code>
+				if [ -f "${database}" ]
+					then
+					var_database="$(cat "${database}" )"
+				fi
+				artista_titolo="$(echo "${stringa_da_cercare}" | tr -c '[[:alnum:]]' '?' | sed s\#'\?'#'\.\*'#g )"
+				lista="$(echo "${var_database}" | sed -n "\#${artista_titolo}#Ip" )"
+				if [ ${#lista} -eq 0 ]
+					then
+					[ "${l}" = "IT" ] && echo "Mi dispiace: nessuna canzone trovata con quella parola chiave..."
+					[ "${l}" = "EN" ] && echo "Sorry: no song found with that keyword..."
+				else
+					echo "${lista}" | sed s\#"^${HOME}"#'~'#
+				fi
+				</code>
+			</button>
+		</hlayout>
+
+		<hlayout>
+			<label>
+				<code>
+				[ "${l}" = "IT" ] && echo "AGGIORNA il database..."
+				[ "${l}" = "EN" ] && echo "UPDATE database..."
+				</code>
+			</label>
+			<file var="dir_canzoni" mode="dir" >
+				<code>
+				echo ""
+				</code>
+			</file>
+			<button>
+				<text>
+				[ "${l}" = "IT" ] && echo "aggiorna"
+				[ "${l}" = "EN" ] && echo "update"
+				</text>
+				<code>
+				cd "${dir_canzoni}"
+					#
+					if [ -f "${database}" ]
+						then
+						mv "${database}" "${database}_OLD"
+					fi
+					echo "${delim}"
+					: 1> "${database}"
+					for ext in ${extensions}
+						do
+						xterm -e "export supermode=dialog ; source easybashgui ; wait_for Searching${ext}... ; find ./ -type f | fgrep -i ${ext} 1>> "${database}_TEMP" ; sleep 1 ; terminate_wait_for; clean_temp"
+					done
+					cat "${database}_TEMP" | sed s\#'^./'#"$(pwd)/"# | sort 1> "${database}"
+					rm "${database}_TEMP"
+					#
+				cd - 1> /dev/null
+				#
+				[ "${l}" = "IT" ] && echo "Inizio creazione del database delle canzoni..."
+				[ "${l}" = "EN" ] && echo "Songs database creation starting..."
+				echo "${delim}"
+				cat "${database}"
+				echo "${delim}"
+				[ "${l}" = "IT" ] && echo "Fine creazione del database delle canzoni."
+				[ "${l}" = "EN" ] && echo "Songs database created."
+				echo "${delim}"
+				</code>
+			</button>
+		</hlayout>
+		<textlog/>
+
+		<label/>
+		<label/>
+
+		<hlayout>
+			<label>
+				<code>
+				[ "${l}" = "IT" ] && echo "SUONA questo file: -->"
+				[ "${l}" = "EN" ] && echo "PLAY this file: -->"
+				</code>
+			</label>
+			<file var="midi" mode="open" filter="Karaoke-files(*.midi *.MIDI *.mid *.MID *.rmi *.RMI *.rcp *.RCP *.r36 *.R36 *.g18 *.G18 *.g36 *.G36 *.mfi *.MFI *.kar *.KAR *.mod *.MOD *.wrd *.WRD)"/>
+		</hlayout>
+
+		<hlayout>
+			<label>
+				<code>
+				[ "${l}" = "IT" ] && echo "SCEGLI il player..."
+				[ "${l}" = "EN" ] && echo "CHOOSE player..."
+				</code>
+			</label>
+			<button text="bashkar">
+				<code>
+				player="bashkar"
+				if [ $(which "${player}" | wc -c ) -eq 0 ]
+					then
+					[ "${l}" = "IT" ] && echo "Err.: \"${player}\" non trovato..."
+					[ "${l}" = "EN" ] && echo "Err.: \"${player}\" not found..."
+				fi
+				#
+				midi="$(echo "${midi}" | sed s\#'^~'#"${HOME}"# )"
+				if [ -f "${midi}" ]
+					then
+					export LD_LIBRARY_PATH="/usr/lib"
+					bashkar "${midi}" &
+					:
+				else
+					[ "${l}" = "IT" ] && echo "Err.: \"${midi}\" non esiste..."
+					[ "${l}" = "EN" ] && echo "Err.: \"${midi}\" doesn't exist..."
+				fi
+				</code>
+			</button>
+BLOCCO_bkXbuc_2
+	if [ $(echo -n "$(type "pykar" 2>/dev/null)" | wc -c) -gt 0 ]
+		then
+		cat <<-'BLOCCO_bkXbuc_pykar'
+			<button text="pykar">
+				<code>
+				player="pykar"
+				if [ $(which "${player}" | wc -c ) -eq 0 ]
+					then
+					[ "${l}" = "IT" ] && echo "Err.: \"${player}\" non trovato..."
+					[ "${l}" = "EN" ] && echo "Err.: \"${player}\" not found..."
+				fi
+				#
+				pykar_height_1=199
+				pykar_height_2=324
+				#
+				midi="$(echo "${midi}" | sed s\#'^~'#"${HOME}"# )"
+				if [ -f "${midi}" ]
+					then
+					pykar --width="1236" --height="${pykar_height_1}" --font-scale="3" --title="pykar: $(basename "${midi}")" "${midi}" &
+					:
+				else
+					[ "${l}" = "IT" ] && echo "Err.: \"${midi}\" non esiste..."
+					[ "${l}" = "EN" ] && echo "Err.: \"${midi}\" doesn't exist..."
+				fi
+				</code>
+			</button>
+BLOCCO_bkXbuc_pykar
+	fi
+	if [ $(echo -n "$(type "xplaymidi" 2>/dev/null)" | wc -c) -gt 0 ]
+		then
+		cat <<-'BLOCCO_bkXbuc_xplaymidi'
+			<button text="xplaymidi">
+				<code>
+				player="xplaymidi"
+				if [ $(which "${player}" | wc -c ) -eq 0 ]
+					then
+					[ "${l}" = "IT" ] && echo "Err.: \"${player}\" non trovato..."
+					[ "${l}" = "EN" ] && echo "Err.: \"${player}\" not found..."
+				fi
+				#
+				midi="$(echo "${midi}" | sed s\#'^~'#"${HOME}"# )"
+				if [ -f "${midi}" ]
+					then
+					xplaymidi "${midi}" &
+					:
+				else
+					[ "${l}" = "IT" ] && echo "Err.: \"${midi}\" non esiste..."
+					[ "${l}" = "EN" ] && echo "Err.: \"${midi}\" doesn't exist..."
+				fi
+				</code>
+			</button>
+BLOCCO_bkXbuc_xplaymidi
+	fi
+	cat <<-'BLOCCO_bkXbuc_3'
+			<button text="timidity">
+				<code>
+				player="timidity"
+				if [ $(which "${player}" | wc -c ) -eq 0 ]
+					then
+					[ "${l}" = "IT" ] && echo "Err.: \"${player}\" non trovato..."
+					[ "${l}" = "EN" ] && echo "Err.: \"${player}\" not found..."
+				fi
+				#
+				midi="$(echo "${midi}" | sed s\#'^~'#"${HOME}"# )"
+				if [ -f "${midi}" ]
+					then
+					#xterm -cr "${background}" -uc -bg "${background}" -fg "${foreground_2}" -fn "${font}" -geometry ${columns}x2+20+400 -e timidity -idt "${midi}" &
+					#timidity ${soundfont_string} -A 105 --volume-compensation -iat "${midi}" &
+					timidity -A 105 --volume-compensation -igt "${midi}" &
+					:
+				else
+					[ "${l}" = "IT" ] && echo "Err.: \"${midi}\" non esiste..."
+					[ "${l}" = "EN" ] && echo "Err.: \"${midi}\" doesn't exist..."
+				fi
+				</code>
+			</button>
+		</hlayout>
+
+	</tab>
+
+
+	<tab><title>[ "${l}" = "IT" ] && echo "Configura" ; [ "${l}" = "EN" ] && echo "Configure"</title>
+
+		<tab><title>[ "${l}" = "IT" ] && echo "Finestre" ; [ "${l}" = "EN" ] && echo "Windows"</title>
+
+			<tab><title>[ "${l}" = "IT" ] && echo "Modo" ; [ "${l}" = "EN" ] && echo "Mode"</title>
+				<combobox var="scelta_Modo">
+					<code>
+					echo "BUC"
+					echo "GTK (fullscreen)"
+					echo "GSW"
+					echo "auto"
+					echo "gtkdialog"
+					echo "Xdialog"
+					echo "kdialog"
+					echo "zenity"
+					echo "dialog"
+					</code>
+				</combobox>
+				<button>
+					<text>
+					[ "${l}" = "IT" ] && echo "salva"
+					[ "${l}" = "EN" ] && echo "save"
+					</text>
+					<code>
+					eval supermode_ORIG=$(cat "${ORIG}"| grep "supermode" | cut -d '=' -f 2 )
+					if [ "${scelta_Modo}" = "BUC" ]
+						then
+						echo -n "use_buc => true"
+						cat "${ORIG}" | sed s\#'use_buc=".*"'#'use_buc="true"'# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+						#
+						echo -n "use_gsw => false"
+						cat "${ORIG}" | sed s\#'use_gsw=".*"'#'use_gsw="false"'# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+						echo -n "use_gtk => false"
+						cat "${ORIG}" | sed s\#'use_gtk=".*"'#'use_gtk="false"'# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+						#
+						scelta_Modo="kdialog"
+						#
+					elif [ "${scelta_Modo}" = "GTK (fullscreen)" ]
+						then
+						if [ $(which "${bk_gtk_binary}" | wc -c ) -eq 0 ]
+							then
+							[ "${l}" = "IT" ] && echo " [fallito: nessun ${bk_gtk_binary} nel sistema...]"
+							[ "${l}" = "EN" ] && echo " [failed: no ${bk_gtk_binary} in system...]"
+							#
+							echo -n "use_buc => true"
+							cat "${ORIG}" | sed s\#'use_buc=".*"'#'use_buc="true"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							#
+							echo -n "use_gsw => false"
+							cat "${ORIG}" | sed s\#'use_gsw=".*"'#'use_gsw="false"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							echo -n "use_gtk => false"
+							cat "${ORIG}" | sed s\#'use_gtk=".*"'#'use_gtk="false"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							#
+							scelta_Modo="kdialog"
+							#
+						else
+							echo -n "use_gtk => true"
+							cat "${ORIG}" | sed s\#'use_gtk=".*"'#'use_gtk="true"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							#
+							echo -n "use_buc => false"
+							cat "${ORIG}" | sed s\#'use_buc=".*"'#'use_buc="false"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							echo -n "use_gsw => false"
+							cat "${ORIG}" | sed s\#'use_gsw=".*"'#'use_gsw="false"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							#
+							scelta_Modo="auto"
+							#
+						fi
+						#
+					elif [ "${scelta_Modo}" = "GSW" ]
+						then
+						if [ $(which "gtkdialog" | wc -c ) -eq 0 ] #ZUZZA
+							then
+							[ "${l}" = "IT" ] && echo " [fallito: nessun gtkdialog nel sistema...]"
+							[ "${l}" = "EN" ] && echo " [failed: no gtkdialog in system...]"
+							#
+							echo -n "use_buc => true"
+							cat "${ORIG}" | sed s\#'use_buc=".*"'#'use_buc="true"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							#
+							echo -n "use_gsw => false"
+							cat "${ORIG}" | sed s\#'use_gsw=".*"'#'use_gsw="false"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							echo -n "use_gtk => false"
+							cat "${ORIG}" | sed s\#'use_gtk=".*"'#'use_gtk="false"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							#
+							scelta_Modo="kdialog"
+							#
+						else
+							echo -n "use_gsw => true"
+							cat "${ORIG}" | sed s\#'use_gsw=".*"'#'use_gsw="true"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							#
+							echo -n "use_buc => false"
+							cat "${ORIG}" | sed s\#'use_buc=".*"'#'use_buc="false"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							echo -n "use_gtk => false"
+							cat "${ORIG}" | sed s\#'use_gtk=".*"'#'use_gtk="false"'# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							#
+							scelta_Modo="gtkdialog"
+							#
+						fi
+						#
+					else
+						echo -n "use_buc => false"
+						cat "${ORIG}" | sed s\#'use_buc=".*"'#'use_buc="false"'# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+						#
+					fi
+					#
+					echo -n "supermode (${supermode_ORIG}) => ${scelta_Modo}"
+					if [ "${scelta_Modo}" = "${supermode_ORIG}" ]
+						then
+						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
+						[ "${l}" = "EN" ] && echo " [nothing to change...]"
+					else
+						if [ "${scelta_Modo}" = "gtkdialog" -o "${scelta_Modo}" = "Xdialog" -o "${scelta_Modo}" = "kdialog" -o "${scelta_Modo}" = "zenity" -o "${scelta_Modo}" = "dialog" ]
+							then
+							if [ $(which "${scelta_Modo}" | wc -c ) -eq 0 ]
+								then
+								[ "${l}" = "IT" ] && echo " [fallito: nessun ${scelta_Modo} nel sistema...]"
+								[ "${l}" = "EN" ] && echo " [failed: no ${scelta_Modo} in system...]"
+							else
+								cat "${ORIG}" | sed s\#'supermode=".*"'#"supermode=\"${scelta_Modo}\""# 1> "${TEMP}"
+								mv "${TEMP}" "${ORIG}"
+								echo " [OK]"
+								#
+								[ "${l}" = "IT" ] && echo "=> Riavvia bashkaraoke per vedere i cambiamenti..."
+								[ "${l}" = "EN" ] && echo "=> Restart bashkaraoke to see changes..."
+								#
+							fi
+						else
+							#
+							# that is: \${scelta_Modo} = "auto" ...
+							#
+							cat "${ORIG}" | sed s\#'supermode=".*"'#"supermode=\"${scelta_Modo}\""# 1> "${TEMP}"
+							mv "${TEMP}" "${ORIG}"
+							echo " [OK]"
+							#
+							[ "${l}" = "IT" ] && echo "=> Riavvia bashkaraoke per vedere i cambiamenti..."
+							[ "${l}" = "EN" ] && echo "=> Restart bashkaraoke to see changes..."
+							#
+						fi
+					fi
+					</code>
+				</button>
+			</tab>
+
+			<tab><title>[ "${l}" = "IT" ] && echo "Tipo" ; [ "${l}" = "EN" ] && echo "Type"</title>
+				<checkbox var="karaoke_window_0_1">
+					<text>
+					[ "${l}" = "IT" ] && echo "Karaoke (clicca per abilitare)"
+					[ "${l}" = "EN" ] && echo "Karaoke (check to enable)"
+					</text>
+				</checkbox>
+				<checkbox var="levels_window_0_1">
+					<text>
+					[ "${l}" = "IT" ] && echo "Livelli (clicca per abilitare)"
+					[ "${l}" = "EN" ] && echo "Levels (check to enable)"
+					</text>
+				</checkbox>
+				<checkbox var="channels_window_0_1">
+					<text>
+					[ "${l}" = "IT" ] && echo "Canali (clicca per abilitare)"
+					[ "${l}" = "EN" ] && echo "Channels (check to enable)"
+					</text>
+				</checkbox>
+				<checkbox var="spectrogram_window_0_1">
+					<text>
+					[ "${l}" = "IT" ] && echo "Spettrogramma (clicca per abilitare)"
+					[ "${l}" = "EN" ] && echo "Spectrogram (check to enable)"
+					</text>
+				</checkbox>
+				<button>
+					<text>
+					[ "${l}" = "IT" ] && echo "salva"
+					[ "${l}" = "EN" ] && echo "save"
+					</text>
+					<code>
+					cat "${ORIG}" 1> "${TEMP1}"
+					#
+					[ ${karaoke_window_0_1} -eq 1 ] && karaoke_window="true" || karaoke_window="false"
+					echo -n "karaoke_window => ${karaoke_window}"
+					cat "${TEMP1}" | sed s\#'karaoke_window=".*"'#"karaoke_window=\"${karaoke_window}\""# 1> "${TEMP2}"
+					echo " [OK]"
+					#
+					[ ${levels_window_0_1} -eq 1 ] && levels_window="true" || levels_window="false"
+					echo -n "levels_window => ${levels_window}"
+					cat "${TEMP2}" | sed s\#'levels_window=".*"'#"levels_window=\"${levels_window}\""# 1> "${TEMP1}"
+					echo " [OK]"
+					#
+					[ ${channels_window_0_1} -eq 1 ] && channels_window="true" || channels_window="false"
+					echo -n "channels_window => ${channels_window}"
+					cat "${TEMP1}" | sed s\#'channels_window=".*"'#"channels_window=\"${channels_window}\""# 1> "${TEMP2}"
+					echo " [OK]"
+					#
+					[ ${spectrogram_window_0_1} -eq 1 ] && spectrogram_window="true" || spectrogram_window="false"
+					echo -n "spectrogram_window => ${spectrogram_window}"
+					cat "${TEMP2}" | sed s\#'spectrogram_window=".*"'#"spectrogram_window=\"${spectrogram_window}\""# 1> "${TEMP1}"
+					echo " [OK]"
+					#
+					mv "${TEMP1}" "${ORIG}"
+					#echo " [DONE]"
+					#
+					</code>
+				</button>
+			</tab>
+		</tab>
+
+
+		<tab><title>[ "${l}" = "IT" ] && echo "Estetica" ; [ "${l}" = "EN" ] && echo "Apparence"</title>
+
+			<tab><title>[ "${l}" = "IT" ] && echo "Colonne" ; [ "${l}" = "EN" ] && echo "Columns"</title>
+				<label/>
+				<label>
+					<code>
+					[ "${l}" = "IT" ] && echo "Quanti caratteri in orizzontale nella finestra Karaoke..."
+					[ "${l}" = "EN" ] && echo "How many horizontal chars in Karaoke window..."
+					</code>
+				</label>
+				<text var="columns">
+					<code>
+					echo "24"
+					</code>
+				</text>
+				<button>
+					<text>
+					[ "${l}" = "IT" ] && echo "salva"
+					[ "${l}" = "EN" ] && echo "save"
+					</text>
+					<code>
+					eval columns_ORIG=$(cat "${ORIG}"| grep "columns" | cut -d '=' -f 2 )
+					echo -n "columns => ${columns}"
+					if [ "${columns}" = "${columns_ORIG}" ]
+						then
+						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
+						[ "${l}" = "EN" ] && echo " [nothing to change...]"
+					else
+						cat "${ORIG}" | sed s\#'col.*n.*=".*"'#"columns=\"${columns}\""# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+					fi
+					</code>
+				</button>
+			</tab>
+
+			<tab><title>[ "${l}" = "IT" ] && echo "Tipo carattere" ; [ "${l}" = "EN" ] && echo "Font"</title>
+				<label/>
+				<label>
+					<code>
+					[ "${l}" = "IT" ] && echo "Tipo di carattere nella finestra Karaoke..."
+					[ "${l}" = "EN" ] && echo "Font type in Karaoke window..."
+					</code>
+				</label>
+				<text var="font">
+					<code>
+					echo "-b&h-lucidatypewriter-medium-r-normal-sans-70-*-*-*-*-*-iso8859-1"
+					</code>
+				</text>
+				<button>
+					<text>
+					[ "${l}" = "IT" ] && echo "salva"
+					[ "${l}" = "EN" ] && echo "save"
+					</text>
+					<code>
+					eval font_ORIG=$(cat "${ORIG}"| grep "font" | cut -d '=' -f 2 )
+					echo -n "font => ${font}"
+					if [ "${font}" = "${font_ORIG}" ]
+						then
+						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
+						[ "${l}" = "EN" ] && echo " [nothing to change...]"
+					else
+						cat "${ORIG}" | sed s\#'font=".*"'#"font=\"${font}\""# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+					fi
+					</code>
+				</button>
+			</tab>
+
+			<tab><title>[ "${l}" = "IT" ] && echo "Colore sfondo" ; [ "${l}" = "EN" ] && echo "Background color"</title>
+				<label/>
+				<label>
+					<code>
+					[ "${l}" = "IT" ] && echo "Colore sfondo nella finestra Karaoke..."
+					[ "${l}" = "EN" ] && echo "Background color in Karaoke window..."
+					</code>
+				</label>
+				<iconlist var="background">
+					<icon text="black">
+						<src>
+						echo "${black_icon}"
+						</src>
+					</icon>
+					<icon text="red">
+						<src>
+						echo "${red_icon}"
+						</src>
+					</icon>
+					<icon text="green">
+						<src>
+						echo "${green_icon}"
+						</src>
+					</icon>
+					<icon text="yellow">
+						<src>
+						echo "${yellow_icon}"
+						</src>
+					</icon>
+					<icon text="blue">
+						<src>
+						echo "${blue_icon}"
+						</src>
+					</icon>
+					<icon text="magenta">
+						<src>
+						echo "${magenta_icon}"
+						</src>
+					</icon>
+					<icon text="cyan">
+						<src>
+						echo "${cyan_icon}"
+						</src>
+					</icon>
+					<icon text="white">
+						<src>
+						echo "${white_icon}"
+						</src>
+					</icon>
+				</iconlist>
+				<button>
+					<text>
+					[ "${l}" = "IT" ] && echo "salva"
+					[ "${l}" = "EN" ] && echo "save"
+					</text>
+					<code>
+					eval background_ORIG=$(cat "${ORIG}"| grep "background" | cut -d '=' -f 2 )
+					echo -n "background => ${background}"
+					if [ "${background}" = "${background_ORIG}" ]
+						then
+						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
+						[ "${l}" = "EN" ] && echo " [nothing to change...]"
+					else
+						cat "${ORIG}" | sed s\#'background=".*"'#"background=\"${background}\""# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+					fi
+					</code>
+				</button>
+			</tab>
+
+			<tab><title>[ "${l}" = "IT" ] && echo "Colore testo gia' cantato" ; [ "${l}" = "EN" ] && echo "Lyric color (already sung)"</title>
+				<label/>
+				<label>
+					<code>
+					[ "${l}" = "IT" ] && echo "Colore testo gia' cantato nella finestra Karaoke..."
+					[ "${l}" = "EN" ] && echo "Lyric color (already sung) in Karaoke window..."
+					</code>
+				</label>
+				<iconlist var="foreground_1">
+					<icon text="black">
+						<src>
+						echo "${black_icon}"
+						</src>
+					</icon>
+					<icon text="red">
+						<src>
+						echo "${red_icon}"
+						</src>
+					</icon>
+					<icon text="green">
+						<src>
+						echo "${green_icon}"
+						</src>
+					</icon>
+					<icon text="yellow">
+						<src>
+						echo "${yellow_icon}"
+						</src>
+					</icon>
+					<icon text="blue">
+						<src>
+						echo "${blue_icon}"
+						</src>
+					</icon>
+					<icon text="magenta">
+						<src>
+						echo "${magenta_icon}"
+						</src>
+					</icon>
+					<icon text="cyan">
+						<src>
+						echo "${cyan_icon}"
+						</src>
+					</icon>
+					<icon text="white">
+						<src>
+						echo "${white_icon}"
+						</src>
+					</icon>
+				</iconlist>
+				<button>
+					<text>
+					[ "${l}" = "IT" ] && echo "salva"
+					[ "${l}" = "EN" ] && echo "save"
+					</text>
+					<code>
+					eval foreground_1_ORIG=$(cat "${ORIG}"| grep "foreground_1" | cut -d '=' -f 2 )
+					echo -n "foreground_1 => ${foreground_1}"
+					if [ "${foreground_1}" = "${foreground_1_ORIG}" ]
+						then
+						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
+						[ "${l}" = "EN" ] && echo " [nothing to change...]"
+					else
+						cat "${ORIG}" | sed s\#'foreground_1=".*"'#"foreground_1=\"${foreground_1}\""# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+					fi
+					</code>
+				</button>
+			</tab>
+
+			<tab><title>[ "${l}" = "IT" ] && echo "Colore testo da cantare" ; [ "${l}" = "EN" ] && echo "Lyric color (to sing)"</title>
+				<label/>
+				<label>
+					<code>
+					[ "${l}" = "IT" ] && echo "Colore testo ancora da cantare nella finestra Karaoke..."
+					[ "${l}" = "EN" ] && echo "Lyric color (still to sing) in Karaoke window..."
+					</code>
+				</label>
+				<iconlist var="foreground_2">
+					<icon text="black">
+						<src>
+						echo "${black_icon}"
+						</src>
+					</icon>
+					<icon text="red">
+						<src>
+						echo "${red_icon}"
+						</src>
+					</icon>
+					<icon text="green">
+						<src>
+						echo "${green_icon}"
+						</src>
+					</icon>
+					<icon text="yellow">
+						<src>
+						echo "${yellow_icon}"
+						</src>
+					</icon>
+					<icon text="blue">
+						<src>
+						echo "${blue_icon}"
+						</src>
+					</icon>
+					<icon text="magenta">
+						<src>
+						echo "${magenta_icon}"
+						</src>
+					</icon>
+					<icon text="cyan">
+						<src>
+						echo "${cyan_icon}"
+						</src>
+					</icon>
+					<icon text="white">
+						<src>
+						echo "${white_icon}"
+						</src>
+					</icon>
+				</iconlist>
+				<button>
+					<text>
+					[ "${l}" = "IT" ] && echo "salva"
+					[ "${l}" = "EN" ] && echo "save"
+					</text>
+					<code>
+					eval foreground_2_ORIG=$(cat "${ORIG}"| grep "foreground_2" | cut -d '=' -f 2 )
+					echo -n "foreground_2 => ${foreground_2}"
+					if [ "${foreground_2}" = "${foreground_2_ORIG}" ]
+						then
+						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
+						[ "${l}" = "EN" ] && echo " [nothing to change...]"
+					else
+						cat "${ORIG}" | sed s\#'foreground_2=".*"'#"foreground_2=\"${foreground_2}\""# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+					fi
+					</code>
+				</button>
+			</tab>
+		</tab>
+
+		<tab><title>[ "${l}" = "IT" ] && echo "Suono" ; [ "${l}" = "EN" ] && echo "Sound"</title>
+			<label/>
+			<label>
+				<code>
+				[ "${l}" = "IT" ] && echo "Per favore, seleziona il soundfont..."
+				[ "${l}" = "EN" ] && echo "Please, select soundfont..."
+				</code>
+			</label>
+			<file var="soundfont" mode="open" />
+			<button>
+				<text>
+				[ "${l}" = "IT" ] && echo "salva"
+				[ "${l}" = "EN" ] && echo "save"
+				</text>
+				<code>
+				eval soundfont_ORIG=$(cat "${ORIG}"| grep "soundfont" | cut -d '=' -f 2 )
+				echo -n "soundfont => ${soundfont}"
+				if [ "${soundfont}" = "${soundfont_ORIG}" ]
+					then
+					[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
+					[ "${l}" = "EN" ] && echo " [nothing to change...]"
+				else
+					cat "${ORIG}" | sed s\#'soundfont=".*"'#"soundfont=\"${soundfont}\""# 1> "${TEMP}"
+					mv "${TEMP}" "${ORIG}"
+					echo " [OK]"
+				fi
+				</code>
+			</button>
+		</tab>
+
+
+		<tab><title>[ "${l}" = "IT" ] && echo "Avanzato" ; [ "${l}" = "EN" ] && echo "Advanced"</title>
+			<tab><title>[ "${l}" = "IT" ] && echo "Estrazione testo canzone" ; [ "${l}" = "EN" ] && echo "Lyric extraction"</title>
+				<combobox var="extract_way">
+					<code>
+					echo "internal"
+					[ "${l}" = "IT" ] && echo "through__midi_text24_pl (serve midi_text24.pl)"
+					[ "${l}" = "EN" ] && echo "through__midi_text24_pl (you need midi_text24.pl)"
+					[ "${l}" = "IT" ] && echo "through__pykar (serve pykar)"
+					[ "${l}" = "EN" ] && echo "through__pykar (you need pykar)"
+					</code>
+				</combobox>
+				<button>
+					<text>
+					[ "${l}" = "IT" ] && echo "salva"
+					[ "${l}" = "EN" ] && echo "save"
+					</text>
+					<code>
+					extract_way="$(echo "${extract_way}" | cut -d '(' -f 1 | cut -d ' ' -f 1 )"
+					#									
+					eval extract_way_ORIG=$(cat "${ORIG}"| grep "extract_way" | cut -d '=' -f 2 )
+					echo -n "extract_way => ${extract_way}"
+					if [ "${extract_way}" = "${extract_way_ORIG}" ]
+						then
+						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
+						[ "${l}" = "EN" ] && echo " [nothing to change...]"
+					else
+						cat "${ORIG}" | sed s\#'extract_way=".*"'#"extract_way=\"${extract_way}\""# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+					fi
+					</code>
+				</button>
+			</tab>
+
+			<tab><title>[ "${l}" = "IT" ] && echo "Rapporto tolleranza agli errori/precisione" ; [ "${l}" = "EN" ] && echo "Error tolerance/precision ratio"</title>
+				<combobox var="error_correction_chars">
+					<code>
+					[ "${l}" = "IT" ] && echo "0 (nessuna tolleranza/precisione perfetta)"
+					[ "${l}" = "EN" ] && echo "0 (no tolerance/perfect precision)"
+					[ "${l}" = "IT" ] && echo "1 (tolleranza media/precisione media)"
+					[ "${l}" = "EN" ] && echo "1 (average tolerance/average precision)"
+					[ "${l}" = "IT" ] && echo "2 (tolleranza alta/precisione bassa)"
+					[ "${l}" = "EN" ] && echo "2 (high tolerance/low precision)"
+					</code>
+				</combobox>
+				<button>
+					<text>
+					[ "${l}" = "IT" ] && echo "salva"
+					[ "${l}" = "EN" ] && echo "save"
+					</text>
+					<code>
+					error_correction_chars="$(echo "${error_correction_chars}" | cut -d '(' -f 1 | tr -dc '[[:digit:]]' )"
+					#
+					eval error_correction_chars_ORIG=$(cat "${ORIG}"| grep "error_correction_chars" | cut -d '=' -f 2 )
+					echo -n "error_correction_chars => ${error_correction_chars}"
+					if [ "${error_correction_chars}" = "${error_correction_chars_ORIG}" ]
+						then
+						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
+						[ "${l}" = "EN" ] && echo " [nothing to change...]"
+					else
+						cat "${ORIG}" | sed s\#'error_correction_chars=".*"'#"error_correction_chars=\"${error_correction_chars}\""# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+					fi
+					</code>
+				</button>
+			</tab>
+		</tab>
+
+
+
+		<tab><title>[ "${l}" = "IT" ] && echo "Varie" ; [ "${l}" = "EN" ] && echo "Misc"</title>
+
+			<tab><title>[ "${l}" = "IT" ] && echo "Lingua delle canzoni" ; [ "${l}" = "EN" ] && echo "Song language"</title>
+				<label/>
+				<label>
+					<code>
+					[ "${l}" = "IT" ] && echo "Questo influisce anche sulla lingua del programma..."
+					[ "${l}" = "EN" ] && echo "This affects also program language..."
+					</code>
+				</label>
+				<combobox var="LANG_pre">
+					<code>
+					locale -a | grep -i "\.UTF.\?8"
+					</code>
+				</combobox>
+				<button>
+					<text>
+					[ "${l}" = "IT" ] && echo "salva"
+					[ "${l}" = "EN" ] && echo "save"
+					</text>
+					<code>
+					LANG="$(echo -n "${LANG_pre}" | cut -d '.' -f 1 ).UTF-8"
+					#
+					eval LANG_ORIG=$(cat "${ORIG}"| grep "LANG" | cut -d '=' -f 2 )
+					echo -n "LANG => ${LANG}"
+					if [ "${LANG}" = "${LANG_ORIG}" ]
+						then
+						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
+						[ "${l}" = "EN" ] && echo " [nothing to change...]"
+					else
+						cat "${ORIG}" | sed s\#'LANG=".*"'#"LANG=\"${LANG}\""# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+					fi
+					</code>
+				</button>
+			</tab>
+
+			<tab><title>[ "${l}" = "IT" ] && echo "Codifica dei caratteri" ; [ "${l}" = "EN" ] && echo "Character encoding"</title>
+				<label/>
+				<label>
+					<code>
+					[ "${l}" = "IT" ] && echo "Per mostrare correttamente i caratteri internazionali..."
+					[ "${l}" = "EN" ] && echo "To correctly show international (non english) characters..."
+					</code>
+				</label>
+				<combobox var="char_encoding">
+					<code>
+					iconv -l | sed s\#'//'#''# | grep -i iso
+					</code>
+				</combobox>
+				<button>
+					<text>
+					[ "${l}" = "IT" ] && echo "salva"
+					[ "${l}" = "EN" ] && echo "save"
+					</text>
+					<code>
+					eval char_encoding_ORIG=$(cat "${ORIG}"| grep "char_encoding" | cut -d '=' -f 2 )
+					echo -n "char_encoding => ${char_encoding}"
+					if [ "${char_encoding}" = "${char_encoding_ORIG}" ]
+						then
+						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
+						[ "${l}" = "EN" ] && echo " [nothing to change...]"
+					else
+						cat "${ORIG}" | sed s\#'char_encoding=".*"'#"char_encoding=\"${char_encoding}\""# 1> "${TEMP}"
+						mv "${TEMP}" "${ORIG}"
+						echo " [OK]"
+					fi
+					</code>
+				</button>
+			</tab>
+		</tab>
+
+
+	<label/>
+	<button>
+		<text>
+		[ "${l}" = "IT" ] && echo "torna alla configurazione di default"
+		[ "${l}" = "EN" ] && echo "back to default configuration"
+		</text>
+		<code>
+		: 1> "${ORIG}"
+		#
+		echo -n "use_gtk => false"
+		echo "export use_gtk=\"false\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "use_gsw => false"
+		echo "export use_gsw=\"false\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "use_buc => false"
+		echo "export use_buc=\"false\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "supermode => auto"
+		echo "export supermode=\"auto\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "karaoke_window => true"
+		echo "export karaoke_window=\"true\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "levels_window => true"
+		echo "export levels_window=\"true\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "channels_window => false"
+		echo "export channels_window=\"false\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "spectrogram_window => false"
+		echo "export spectrogram_window=\"false\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "rows => 2"
+		echo "export rows=2" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "columns => 24"
+		echo "export columns=24" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "font => -b&h-lucidatypewriter-medium-r-normal-sans-70-*-*-*-*-*-iso8859-1"
+		echo "export font=\"-b&h-lucidatypewriter-medium-r-normal-sans-70-*-*-*-*-*-iso8859-1\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "background => ${dbg}"
+		echo "export background=\"${dbg}\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "foreground_1 => ${dfg1}"
+		echo "export foreground_1=\"${dfg1}\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "foreground_2 => ${dfg2}"
+		echo "export foreground_2=\"${dfg2}\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "soundfont => /usr/local/share/timidity/PC51f.sf2"
+		echo "export soundfont=\"/usr/local/share/timidity/PC51f.sf2\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "extract_way => internal"
+		echo "export extract_way=\"internal\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "error_correction_chars => 0"
+		echo "export error_correction_chars=\"0\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "LANG => en_GB.UTF-8"
+		echo "export LANG=\"en_GB.UTF-8\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "char_encoding => ISO-8859-1"
+		echo "export char_encoding=\"ISO-8859-1\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "delimiter => ______________________________________"
+		echo "export delimiter=\"______________________________________\"" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "default_Volume => ${dv}"
+		echo "export predefvolume=${dv}" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "default_Pitch => ${dp}"
+		echo "export predefpitch=${dp}" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "default_Tempo => ${dt}"
+		echo "export predefspeed=${dt}" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "default_font_family => ${dff}"
+		echo "export font_family=${dff}" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "show_debug => 0"
+		echo "export show_debug=0" 1>> "${ORIG}"
+		echo " [OK]"
+		#
+		echo -n "show_tabs => 0"
+		echo "export show_tabs=0" 1>> "${ORIG}"
+		echo " [OK]"
+		</code>
+	</button>
+
+	<label/>
+	<textlog/>
+	</tab>
+	
+
+	<tab><title>[ "${l}" = "IT" ] && echo "Informazioni" ; [ "${l}" = "EN" ] && echo "About"</title>
+		<label/>
+		<label>
+			<code>
+			[ "${l}" = "IT" ] && echo "BashKaraoke v.${BK_VERSION_NUMBER} basata su BUC v.0.5.2"
+			[ "${l}" = "EN" ] && echo "BashKaraoke v.${BK_VERSION_NUMBER} based on BUC v.0.5.2"
+			</code>
+		</label>
+		<label/>
+		<label>
+			<code>
+			[ "${l}" = "IT" ] && echo "BashKaraoke e' un programma karaoke aperto e gratuito scritto in bash che usa Timidity."
+			[ "${l}" = "EN" ] && echo "BashKaraoke is a free karaoke program written in bash using Timidity."
+			</code>
+		</label>
+		<label/>
+		<label/>
+		<tab><title>[ "${l}" = "IT" ] && echo "Autore" ; [ "${l}" = "EN" ] && echo "Author"</title>
+			<label>
+				<code>
+				echo "Vittorio Cagnetta"
+				echo "	vaisarger@gmail.com"
+				</code>
+			</label>
+		</tab>
+		<tab><title>[ "${l}" = "IT" ] && echo "Ringraziamenti" ; [ "${l}" = "EN" ] && echo "Thanks"</title>
+			<label>
+				<code>
+				echo "Timidity: All timidity people"
+				echo "	:)"
+				echo ""
+				echo "bashkaraoke-gtk: Davide Depau, Stephen Smally"
+				echo "	david.dep.1996@gmail.com"
+				echo "	stephen.smally@gmail.com"
+				echo ""
+				echo "BUC: Matteo Avalle, Valerio Billera"
+				echo "	smat@sicilinux.org"
+				</code>
+			</label>
+		</tab>
+	</tab>
+
+</config>
+BLOCCO_bkXbuc_3
+	}
+#
+#
+#
+outputta_bkXgtkdialog()
+	{
+	cat <<BLOCCO_bkXgtkdialog
+	
+<window title="Bash!Karaoke ${BK_VERSION_NUMBER}: bash the microphone and break your music!" default_height="${height}" default_width="${width}" window_position="1" icon-name="gtk-dialog-info">
+	<vbox scrollable="true">
+		$(
+		[ "${l}" = "IT" ] && echo "<notebook labels=\"Suona|Configura|Informazioni\">" 
+		[ "${l}" = "EN" ] && echo "<notebook labels=\"Play|Configure|About\">" 
+		)
+			<frame>
+				<frame>
+					<pixmap>
+						<input file>${gsw_BK_icon}</input>
+					</pixmap>
+				</frame>
+				
+				<frame Midi Database>
+					
+						$(
+						[ "${l}" = "IT" ] && echo "<button tooltip-text=\" RICERCA il midi nel database... \">" 
+						[ "${l}" = "EN" ] && echo "<button tooltip-text=\" SEARCH midi in database... \">" 
+						)
+							<input file>${gsw_sing_BK_icon}</input>
+							<action type="launch">GSW_SEARCH_DIALOG</action>
+						</button>
+					
+						$(
+						[ "${l}" = "IT" ] && echo "<button tooltip-text=\" AGGIORNA il database... \">" 
+						[ "${l}" = "EN" ] && echo "<button tooltip-text=\" UPDATE database... \">" 
+						)
+							<input file stock="gtk-save"></input>
+							<action type="launch">GSW_DIR_DIALOG</action>
+						</button>
+					
+				</frame>
+				
+				<frame Filesystem>
+					
+						$(
+						[ "${l}" = "IT" ] && echo "<button tooltip-text=\" SELEZIONA il midi direttamente nel filesystem... \">" 
+						[ "${l}" = "EN" ] && echo "<button tooltip-text=\" SELECT midi directly in filesystem... \">" 
+						)
+							<input file stock="gtk-open"></input>
+							<action type="launch">GSW_FILE_DIALOG</action>
+						</button>
+					
+				</frame>
+			</frame>
+			
+			
+			
+			
+		
+			<frame>
+				
+				
+				$(
+				[ "${l}" = "IT" ] && echo "<frame Configurazioni>" 
+				[ "${l}" = "EN" ] && echo "<frame Settings>" 
+				)
+				
+					<text>
+						<input file>"${dir_Karaoke}/${rc_file}"</input>
+						<variable>SETTINGS</variable>
+					</text>
+					
+					
+					
+					$(
+					[ "${l}" = "IT" ] && echo "<button tooltip-text=\" CONFIGURA $(basename "${0}" )... \">" 
+					[ "${l}" = "EN" ] && echo "<button tooltip-text=\" CONFIGURE $(basename "${0}" )... \">" 
+					)
+						<input file stock="gtk-edit"></input>
+						<action type="command">bash -c "source ${bk_COMMON}; modifica_rc ; clean_temp"</action>
+						<action type="refresh">SETTINGS</action>
+					</button>
+					
+					$(
+					[ "${l}" = "IT" ] && echo "<button tooltip-text=\" TORNA alla configurazione di default... \">" 
+					[ "${l}" = "EN" ] && echo "<button tooltip-text=\" GO BACK to default configuration... \">" 
+					)
+						<input file stock="gtk-home"></input>
+						<action type="command">bash -c "source ${bk_COMMON}; crea_rc_default 1> ${dir_Karaoke}/${rc_file} ; clean_temp"</action>
+						<action type="refresh">SETTINGS</action>
+					</button>
+				
+				</frame>
+			
+				
+			</frame>
+	
+		
+		
+		
+		
+		
+			<frame>
+				<frame>
+					<pixmap>
+						<input file>${gsw_BK_icon}</input>
+					</pixmap>
+				</frame>
+				
+				$(
+				[ "${l}" = "IT" ] && echo "<notebook labels=\"Informazioni|Autore|Ringraziamenti\">" 
+				[ "${l}" = "EN" ] && echo "<notebook labels=\"About|Author|Thanks\">" 
+				)
+				<vbox>
+					<frame>
+						<pixmap xalign="0">
+							<input file stock="gtk-dialog-info"></input>
+						</pixmap>
+						<text xalign="2">
+							$(
+							[ "${l}" = "IT" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} basata su Gtkdialog ${required_gtkdialog_first_field}.${required_gtkdialog_second_field}.${required_gtkdialog_third_field}
+					
+BashKaraoke e' un programma karaoke scritto in bash che usa Timidity.\"</label>" 
+							[ "${l}" = "EN" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} based on Gtkdialog ${required_gtkdialog_first_field}.${required_gtkdialog_second_field}.${required_gtkdialog_third_field}
+					
+BashKaraoke is a karaoke program written in bash using Timidity.\"</label>" 
+							)
+						</text>
+					</frame>
+				</vbox>
+				<vbox>
+					<frame>
+						<text xalign="2">
+							<label>"Vittorio Cagnetta (vaisarger@gmail.com)"</label>
+						</text>
+					</frame>
+				</vbox>
+				<vbox>
+					<frame>
+						<text xalign="2">
+							<label>"Timidity: All timidity people :)
+							
+Gtkdialog: Laszlo Pere, Matyas Koniorczyk -old developers- and Thunor -current developer- (thunorsif@hotmail.com) 
+
+bashkaraoke-gtk: Davide Depau (david.dep.1996@gmail.com), Stephen Smally (stephen.smally@gmail.com) "</label>
+						</text>
+					</frame>
+				</vbox>
+				</notebook>
+			</frame>
+		
+			
+			
+		</notebook>
+		<hbox>
+			<button use-stock="true" label="gtk-quit"></button>
+		</hbox>
+	</vbox>
+</window>
+
+BLOCCO_bkXgtkdialog
+	}
+#
+#
+#
+[ "${l}" = "IT" ] && export GSW_SEARCH_DIALOG_title="Bash!Karaoke: digita artista e/o canzone..."
+[ "${l}" = "EN" ] && export GSW_SEARCH_DIALOG_title="Bash!Karaoke: type artist and/or song name..."
+export GSW_SEARCH_DIALOG="
+	<window title=\"${GSW_SEARCH_DIALOG_title}\" window_position=\"1\" default_width=\"400\">"'
+		<vbox>
+			<frame>
+				<hbox>
+				<entry>
+					<input>cat ${dummy_file}</input>
+					<variable>STRING_TO_FIND</variable>
+				</entry>
+				<button>
+					<input file stock="gtk-find"></input>
+					<action type="command">echo ATREASUREINSIDEANDSTRONGOUTSIDEMYPOWERISTHESHELL=$STRING_TO_FIND</action>
+					<action type="launch">GSW_LIST_DIALOG</action>
+					<action type="closewindow">GSW_SEARCH_DIALOG</action>
+				</button>
+				</hbox>
+			</frame>
+			<hbox>
+				<button use-stock="true" label="gtk-close">
+					<action type="closewindow">GSW_SEARCH_DIALOG</action>
+				</button>
+			</hbox>
+		</vbox>
+	</window>
+'
+#
+#
+#
+# <action type="command">${bk_extractor} "$CHOISES" 1>${info_file} ; export info_file ; bash -c "source ${bk_COMMON}; cat \"${info_file}\" | text ; clean_temp"</action>
+[ "${l}" = "IT" ] && export GSW_LIST_DIALOG_title="Bash!Karaoke: seleziona il midi..."
+[ "${l}" = "EN" ] && export GSW_LIST_DIALOG_title="Bash!Karaoke: select midi..."
+export GSW_LIST_DIALOG="
+	<window title=\"${GSW_LIST_DIALOG_title}\" window_position=\"1\" default_width=\"500\">"'
+		<vbox>
+			<frame Midi list>
+				<table>
+					<variable>CHOISES</variable>
+					<input>sleep 2; cat "${dir_Karaoke}/lista_karaoke.txt"</input>
+				</table>
+				<hbox>
+					<button>
+						<label>bashkar</label>
+						<action type="command">bashkar "$CHOISES"</action>
+						<action type="closewindow">GSW_SEARCH_DIALOG</action>
+						<action type="closewindow">GSW_LIST_DIALOG</action>
+					</button>
+					<button>
+						<label>pykar</label>
+						<action type="command">pykar_height_1=199; pykar_height_2=324 ; pykar --width="1236" --height="${pykar_height_1}" --font-scale="3" --title="pykar: $(basename "$CHOISES")" "$CHOISES"</action>
+						<action type="closewindow">GSW_SEARCH_DIALOG</action>
+						<action type="closewindow">GSW_LIST_DIALOG</action>
+					</button>
+					<button>
+						<label>xplaymidi</label>
+						<action type="command">xplaymidi "$CHOISES"</action>
+						<action type="closewindow">GSW_SEARCH_DIALOG</action>
+						<action type="closewindow">GSW_LIST_DIALOG</action>
+					</button>
+					<button>
+						<label>timidity</label>
+						<action type="command">timidity -A 105 --volume-compensation -igt "$CHOISES"</action>
+						<action type="closewindow">GSW_SEARCH_DIALOG</action>
+						<action type="closewindow">GSW_LIST_DIALOG</action>
+					</button>
+					<button>
+						<input file stock="gtk-edit"></input>
+						<action type="command">export CHOISES ; bash -c "source ${bk_COMMON}; extract_song_lyric \"${CHOISES}\" ; clean_temp"</action>
+					</button>
+					<button>
+						<input file stock="gtk-info"></input>
+						<action type="command">export CHOISES ; bash -c "source ${bk_COMMON}; message \"$(${bk_OUT} -i "${CHOISES}" )\" ; clean_temp"</action>
+					</button>
+				</hbox>
+			</frame>
+			<hbox>
+				<button use-stock="true" label="gtk-close">
+					<action type="closewindow">GSW_LIST_DIALOG</action>
+				</button>
+			</hbox>
+		</vbox>
+	</window>
+'
+#
+#
+#
+[ "${l}" = "IT" ] && export GSW_DIR_DIALOG_title="Bash!Karaoke: seleziona la cartella..."
+[ "${l}" = "EN" ] && export GSW_DIR_DIALOG_title="Bash!Karaoke: select directory..."
+export GSW_DIR_DIALOG="
+	<window title=\"${GSW_DIR_DIALOG_title}\" window_position=\"1\" default_width=\"400\">"'
+		<vbox>
+			<frame>
+				<frame Midi directory>
+					<hbox>
+						<entry accept="directory">
+							<label>Select a Directory</label>
+							<variable>FILE_DIRECTORY</variable>
+						</entry>
+					<button>
+						<input file stock="gtk-save"></input>
+						<variable>BROWSE_DIRECTORY</variable>
+						<action type="fileselect">FILE_DIRECTORY</action>
+						
+					</button>
+					</hbox>
+				</frame>
+				<button ok>
+					<action type="command">echo $FILE_DIRECTORY</action>
+					<action type="command">echo ${extensions}</action>
+					<action type="command">cd "$FILE_DIRECTORY" ; if [ -f "${database}" ] ; then mv "${database}" "${database}_OLD" ; fi ; echo "" 1> "${database}" ; for ext in ${extensions} ; do xterm -e "export supermode=dialog ; source easybashgui ; wait_for Searching${ext}... ; find ./ -type f | fgrep -i ${ext} 1>> "${database}_TEMP" ; sleep 1 ; terminate_wait_for; clean_temp" ; done ; cat "${database}_TEMP" | sed s\#'^./'#"$(pwd)/"# | sort 1> "${database}" ; rm "${database}_TEMP"</action>
+					<action type="closewindow">GSW_DIR_DIALOG</action>
+				</button>
+			</frame>
+			<hbox>
+				<button use-stock="true" label="gtk-close">
+					<action type="closewindow">GSW_DIR_DIALOG</action>
+				</button>
+			</hbox>
+		</vbox>
+	</window>
+'
+#
+#
+#
+[ "${l}" = "IT" ] && export GSW_FILE_DIALOG_title="Bash!Karaoke: seleziona il file..."
+[ "${l}" = "EN" ] && export GSW_FILE_DIALOG_title="Bash!Karaoke: select file..."
+export GSW_FILE_DIALOG="
+	<window title=\"${GSW_FILE_DIALOG_title}\" window_position=\"1\" default_width=\"500\">"'
+		<vbox>
+			<frame Midi filename>
+				<frame>
+					<hbox>
+						<entry accept="filename">
+							<label>Select a File</label>
+							<variable>FILE_TO_PLAY</variable>
+						</entry>
+						<button>
+							<input file stock="gtk-open"></input>
+							<variable>BROWSE_FILE</variable>
+							<action type="fileselect">FILE_TO_PLAY</action>
+						</button>
+					</hbox>
+				</frame>
+				<hbox>
+					<button>
+						<label>bashkar</label>
+						<action type="command">bashkar "$FILE_TO_PLAY"</action>
+					</button>
+					<button>
+						<label>pykar</label>
+						<action type="command">pykar_height_1=199; pykar_height_2=324 ; pykar --width="1236" --height="${pykar_height_1}" --font-scale="3" --title="pykar: $(basename "$CHOISES")" "$FILE_TO_PLAY"</action>
+					</button>
+					<button>
+						<label>xplaymidi</label>
+						<action type="command">xplaymidi "$FILE_TO_PLAY"</action>
+					</button>
+					<button>
+						<label>timidity</label>
+						<action type="command">timidity -A 105 --volume-compensation -igt "$FILE_TO_PLAY"</action>
+					</button>
+					<button>
+						<input file stock="gtk-edit"></input>
+						<action type="command">export FILE_TO_PLAY ; bash -c "source ${bk_COMMON}; extract_song_lyric \"${FILE_TO_PLAY}\" ; clean_temp"</action>
+					</button>
+					<button>
+						<input file stock="gtk-info"></input>
+						<action type="command">export FILE_TO_PLAY ; bash -c "source ${bk_COMMON}; message \"$(${bk_OUT} -i "${FILE_TO_PLAY}" )\" ; clean_temp"</action>
+					</button>
+				</hbox>
+			</frame>
+			<hbox>
+				<button use-stock="true" label="gtk-close">
+					<action type="closewindow">GSW_FILE_DIALOG</action>
+				</button>
+			</hbox>
+		</vbox>
+	</window>
+'
+#
+#
+#
+togli_accordi()
+	{
+	# "internal" way doesn't use this function anymore...
+	testo="${1}"
+	echo "${testo}" | gsed s\^' [[:digit:]]\?'^'\n'^g | gsed s\^'%.*'^''^g | \
+		(
+		IFS=$'\n'
+		while read -r riga
+			do
+			if [ ${#riga} -eq 0 ]
+				then
+				echo -n " "
+			else
+				echo -n "${riga} "
+			fi
+		done 
+		)
+	}
+#
+#
+#
+togli_intestazione()
+	{
+	# "internal" way doesn't use this function anymore...
+	testo="${1}"
+	echo "${testo#*@*/}"
+	}
+#
+#
+#
+cat__international_chars()
+	{
+	gsed s\#"M-4"#"'"#g | \
+	gsed s\#"M-^R"#"'"#g | \
+	gsed s\#'M-`'#'à'#g | \
+	gsed s\#'M-a'#'á'#g | \
+	gsed s\#'M-h'#'è'#g | \
+	gsed s\#'M-i'#'é'#g | \
+	gsed s\#'M-l'#'ì'#g | \
+	gsed s\#'M-m'#'í'#g | \
+	gsed s\#'M-r'#'ò'#g | \
+	gsed s\#'M-s'#'ó'#g | \
+	gsed s\#'M-y'#'ù'#g | \
+	gsed s\#'M-z'#'ú'#g | \
+	gsed s\#'M-H'#'È'#g
+	}
+#
+distingui()
+	{
+	while read -r riga1
+		do
+		primo_char="${riga1:0:1}"
+		if [ "${primo_char}" = "^" ]
+			then
+			char="${riga1:1:1}"
+			codice_ascii=$(printf "%o" "'${char}" )
+			numero_caratteri=$(( 8#${codice_ascii} - 8#100 ))
+			if [ ${numero_caratteri} -ge 0 ]
+				then
+				echo -e "${riga1:2:${numero_caratteri}}"
+				#
+			else
+				char="$(echo -e "\x${char}" )"
+				codice_ascii=$(printf "%o" "'${char}" )
+				numero_caratteri=$(( 8#${codice_ascii} - 8#100 ))
+				echo -e "${riga1:2:${numero_caratteri}}"
+				#
+			fi
+			#
+		else
+			char="${riga1:0:1}"
+			numero_caratteri=$(printf "%d" "'${char}" )
+			echo -e "${riga1:1:${numero_caratteri}}"
+			#
+		fi
+		#
+	done
+	}
+#
+estrai()
+	{
+	export song="${1}"
+	#
+	#echo "${testo_raw}" 1>&2
+	echo "${testo_raw}" | \
+	tr '\\' '/' | \
+	tr '\n' '\\' | gsed s\#'\\'#'^J'#g | \
+	gsed s\#"${!song}"#'\nATREASUREINSIDEANDSTRONGOUTSIDEMYPOWERISTHESHELL'#g | \
+	gsed -n s\#'ATREASUREINSIDEANDSTRONGOUTSIDEMYPOWERISTHESHELL\(.*\)'#'\1'#p | \
+	cut -d '^' -f 1,2,3 | \
+	(
+	IFS=$'\n'
+	distingui
+	)
+	#gsed s\#'M-\^[A-G]'#' ^'#g | \
+	#gsed s\#'.M-\^[H-Z]'#' ^'#g | \
+	#gsed s\#'M-'#' ^'#g 
+	#
+	}
+#
+extract__internal()
+	{
+	#
+	# ...ONLY with shell tools... 
+	# this is "true" bash's karaoke... ;-)
+	#
+	#################################
+	#
+	if [ "${1}" = "--text" -o "${1}" = "--lyric" ]
+		then
+		midi="${2}"
+		extract_field="$(echo "${1}" | tr -d '-' )"
+	else
+		midi="${1}"
+		extract_field=""
+	fi
+	text="M-^?^A"
+	lyric="M-^?^E"
+	#
+	#################################
+	#
+
+	#
+	######################
+	#
+	testo_raw="$(cat -v "${midi}" | cat__international_chars )"
+	#
+	######
+	#
+	: testo_raw
+	if [ ${#extract_field} -gt 0 ]
+		then
+		echo -e "\n\"${extract_field}\" field :\n---------------------------------------"
+		if [ "${extract_field}" = "text" ]
+			then
+			canzone_text="$(estrai "text" )" ; canzone_text_senza_NOTE="$(echo "${canzone_text}" | tr -d 'ABCDEFGMajminSus34579#b ' )"
+			#
+			pre_testo="${canzone_text}"
+			#
+		elif [ "${extract_field}" = "lyric" ]
+			then
+			canzone_lyric="$(estrai "lyric" )"
+			#
+			pre_testo="${canzone_lyric}"
+			#
+		fi
+	else
+		#
+		######
+		#
+		canzone_text="$(estrai "text" )"
+		canzone_text_senza_NOTE="$(echo "${canzone_text}" | tr -d 'ABCDEFGMajminSus34579#b ' )"
+		#
+		canzone_lyric="$(estrai "lyric" )"
+		#
+		######
+		#
+		pre_testo="$( if [ ${#canzone_lyric} -gt ${#canzone_text_senza_NOTE} ]
+				then
+				echo "${canzone_lyric}"
+				#
+			else
+				echo "${canzone_text}"
+				#
+			fi )"
+	fi
+	: pre_testo
+	#
+	#########################
+	togli_accordi_internal()
+		{
+		testo="${1}"
+		echo "${testo}"  | tr ' ' '\n' | gsed s\^'%.*'^''^g | \
+			(
+			IFS=$'\n'
+			while read -r riga
+				do
+				if [ ${#riga} -eq 0 ]
+					then
+					echo -n ""
+				else
+					echo -n "${riga} "
+				fi
+			done 
+			)
+		}
+	#
+	togli_intestazione_internal()
+		{
+		testo="${1}"
+		#
+		#echo "${testo##@*@}"
+		echo "${testo/#*@/@}" | \
+		gsed s\#'@K'#'Info: '# | \
+		gsed s\#'@L'#'Language: '# | \
+		gsed s\#'@T'#'*** '#g | \
+		gsed s\#'@[[:upper:]]'#" ${end_strophe}"#g
+		}
+	#
+	: fine_canzone
+	#
+	if [ ${#extract_field} -eq 0 ]
+		then
+		end_strophe=""
+	else
+		end_strophe="ATREASUREINSIDEANDSTRONGOUTSIDEMYPOWERISTHESHELL"
+	fi
+	testo_di_controllo_pre="$(echo "$(
+					echo -e "${pre_testo}${fine_canzone}" | \
+					cut -d '^' -f 1 | \
+						(
+						IFS=$'\n'
+						while read -r riga
+							do
+							if [ ${#riga} -eq 0 ]
+								then
+								echo -n " ${end_strophe}^"
+							else
+								echo -n "${riga}^"
+							fi
+						done 
+						) | \
+					gsed s\#" ^ ^ \?^\?"#" ${end_strophe}^"#g | \
+					tr '\t' ' ' | \
+					tr '<' ' ' | \
+					gsed s\#"/"#" ${end_strophe}"#g | \
+					tr -s ' ' 
+					)"  
+				)"
+	testo_di_controllo_pre="$(togli_accordi_internal "${testo_di_controllo_pre}" )"
+	testo_di_controllo_pre="$(togli_intestazione_internal "${testo_di_controllo_pre}" )"
+	testo_di_controllo_pre="$(echo "${testo_di_controllo_pre}" | \
+					gsed s\#'\([[:alnum:]]\+\)\([[:punct:]]*[[:blank:]]*[[:punct:]]*[[:blank:]]*\)^'#'\1^\2'#g | \
+					gsed s\#'\([[:punct:]]\)^'#'\1'#g | \
+					gsed s\#'\([[:blank:]]\)^'#'\1'#g | \
+					gsed s\#"\^\(['\"?!);,:.]\)"#"\1^"#g )"
+	#
+	if [ ${#extract_field} -eq 0 ]
+		then
+		testo_di_controllo="$(echo "${testo_di_controllo_pre}" | sposta_parole "${columns}" )"
+	else
+		testo_di_controllo="${testo_di_controllo_pre}"
+	fi
+	: testo_di_controllo
+	#
+	###################
+	#
+	testo="$(echo "${testo_di_controllo}" | tr -d '^' )"
+	if [ ${#extract_field} -eq 0 ]
+		then
+		:
+	else
+		testo="$(echo "${testo}" | gsed s\#"${end_strophe}"#'\n'#g )"
+	fi
+	: testo
+	#
+	###################
+	#
+	if [ ${#extract_field} -eq 0 ]
+		then
+		#
+		testo_di_controllo_per_media="$(echo "${testo_di_controllo}" | tr '^' '\n' )"
+		linee=$(echo "${testo_di_controllo_per_media}" | wc -l )
+		var_media_columns=$(echo "${testo_di_controllo_per_media}" | media_columns ${linee} )
+		#
+		if [ ${var_media_columns} -gt ${soglia} ]
+			then
+			export righe=3
+		elif [ ${var_media_columns} -le ${soglia} ]
+			then
+			export righe=2
+		fi
+		: righe 
+		#
+	else
+		#
+		echo "${testo}"
+		echo -e "\n---------------------------------------\n"
+		#
+	fi
+	#
+	###################
+	#
+	}
+#
+#
+#
+extract__through__midi_text24_pl()
+	{
+	#
+	if [ $(echo -n "$(type "midi_text24.pl" 2>/dev/null)" | wc -c) -eq 0 ]
+		then
+		[ "${l}" = "IT" ] && alert_message "Errore:\nmidi_text24.pl\nnon trovato..."
+		[ "${l}" = "EN" ] && alert_message "Error:\nmidi_text24.pl\nnot found..."
+		exit 1
+	else
+		midi_text24_pl__path="$(type -P "midi_text24.pl" | head -n 1)"
+	fi
+	#
+	#################################
+	#
+	midi="${1}"
+	text="Text event"
+	lyric="Lyric"
+	#
+	#################################
+	#
+	extract()
+		{
+		while read -r -a array_riga
+			do
+			if [[ ${array_riga[0]} =~ .*[[:alnum:]]+.* ]]
+				then
+				testo_caratt="$(echo "${array_riga[0]}" | gsed s\#'[[:blank:]]*$'#''#g )"
+				num_caratt=${array_riga[1]}
+				if [[ ${num_caratt} =~ [[:digit:]]+ ]]
+					then
+					if [ ${#testo_caratt} -eq ${num_caratt} ]
+						then
+						echo -n "${testo_caratt}" ; continue
+					else
+						echo -n "${testo_caratt} " ; continue
+					fi
+				else
+					echo ; continue
+				fi
+			else
+				echo "/" ; continue
+			fi
+		done 
+		}
+	#
+	extract_di_controllo()
+		{
+		while read -r -a array_riga
+			do
+			if [[ ${array_riga[0]} =~ .*[[:alnum:]]+.* ]]
+				then
+				testo_caratt="$(echo "${array_riga[0]}" | gsed s\#'[[:blank:]]*$'#''#g )"
+				num_caratt=${array_riga[1]}
+				if [[ ${num_caratt} =~ [[:digit:]]+ ]]
+					then
+					if [ ${#testo_caratt} -eq ${num_caratt} ]
+						then
+						echo -n "${testo_caratt}^" ; continue
+					else
+						echo -n "${testo_caratt} ^" ; continue
+					fi
+				else
+					echo ; continue
+				fi
+			else
+				echo "/^" ; continue
+			fi
+		done 
+		}
+	#
+	################################# 
+	# 
+	raw="$("${midi_text24_pl__path}" "${midi}" 2>/dev/null | iconv -f "${char_encoding}" )"
+	#
+	canzone_text="$(IFS=$'()\t\n' && \
+			echo "${raw}" | \
+			tr '\' '/' | \
+			gsed -n s\#"^.*${text}:[[:blank:]]*\(.*\)"#'\1'#p | \
+			extract | tr '\' '\n' | tr '/' '\n' && \
+			IFS=$' \t\n' )"
+	canzone_text_di_controllo="$(IFS=$'()\t\n' && \
+			echo "${raw}" | \
+			tr '\' '/' | \
+			gsed -n s\#"^.*${text}:[[:blank:]]*\(.*\)"#'\1'#p | \
+			extract_di_controllo | tr '\' '\n' | tr '/' '\n' && \
+			IFS=$' \t\n' )"
+	#
+	canzone_text_senza_NOTE="$(echo "${canzone_text}" | tr -d 'ABCDEFGMajminSsus34579#' )"
+	canzone_text_senza_NOTE_di_controllo="$(echo "${canzone_text_di_controllo}" | tr -d 'ABCDEFGMajminSsus34579#' )"
+	#
+	canzone_lyric="$(IFS=$'()\t\n' && \
+			echo "${raw}" | \
+			tr '\' '/' | \
+			gsed -n s\#"^.*${lyric}:[[:blank:]]*\(.*\)"#'\1'#p | \
+			extract && \
+			IFS=$' \t\n' )"
+	canzone_lyric_di_controllo="$(IFS=$'()\t\n' && \
+			echo "${raw}" | \
+			tr '\' '/' | \
+			gsed -n s\#"^.*${lyric}:[[:blank:]]*\(.*\)"#'\1'#p | \
+			extract_di_controllo && \
+			IFS=$' \t\n' )"
+	#
+	#########
+	#
+	pre_testo="$( if [ ${#canzone_lyric} -gt ${#canzone_text_senza_NOTE} ]
+				then
+				echo "${canzone_lyric}"
+				#
+			else
+				echo "${canzone_text}"
+				#
+			fi | gsed -e '\#^$#d' )"
+	pre_testo_di_controllo="$( if [ ${#canzone_lyric_di_controllo} -gt ${#canzone_text_senza_NOTE_di_controllo} ]
+				then
+				echo "${canzone_lyric_di_controllo}"
+				#
+			else
+				echo "${canzone_text_di_controllo}"
+				#
+			fi | gsed -e '\#^$#d' )"
+	#
+	testo_di_controllo="$(echo ${pre_testo_di_controllo} | tr '\t' ' ' | tr -s ' ' | tr '<' ' / ' )"
+	: testo_di_controllo
+	#
+	testo_di_controllo_per_media="$(echo "${testo_di_controllo}" | tr '^' '\n' )"
+	linee=$(echo "${testo_di_controllo_per_media}" | wc -l )
+	var_media_columns=$(echo "${testo_di_controllo_per_media}" | media_columns ${linee} )
+	if [ ${var_media_columns} -gt ${soglia} ]
+		then
+		export righe=3
+	elif [ ${var_media_columns} -le ${soglia} ]
+		then
+		export righe=2
+	fi
+	: righe 
+	#
+	testo="$(echo "${pre_testo} ${fine_canzone}" )"
+	testo="$(echo "${testo}" | tr '\t' ' ' | tr -s ' ' | tr '<' ' / ' )"
+	#
+	: testo
+	#
+	testo="$(togli_accordi "${testo}" )"
+	testo="$(togli_intestazione  "${testo}" )"
+	: testo
+	#
+	testo_di_controllo="$(togli_accordi "${testo_di_controllo}" )"
+	testo_di_controllo="$(togli_intestazione "${testo_di_controllo}" )"
+	: testo_di_controllo
+	}
+#
+#
+#
+extract__through__pykar()
+	{
+	#
+	if [ $(echo -n "$(type "pykar" 2>/dev/null)" | wc -c) -eq 0 ]
+		then
+		[ "${l}" = "IT" ] && alert_message "Errore:\npykar\nnon trovato..."
+		[ "${l}" = "EN" ] && alert_message "Error:\npykar\nnot found..."
+		exit 1
+	else
+		pykar__path="$(type -P "pykar" | head -n 1)"
+	fi
+	#
+	#################################
+	#
+	midi="${1}"
+	#
+		{ 
+		unset DISPLAY ; pykar -n "${midi}" 2>/dev/null | gsed -n s\#'.*Lyric: \(.*\)'#'\1'#p 1> "${lyric}" 
+		} &
+	#
+	#################################
+	#
+	sleep 4
+	#
+	RIPROVATO="NO"
+	while :
+		do
+		array_pid_di_pykar=( $(ps auxww | grep "pykar" | grep -v grep | gsed -n s\#'[[:alnum:]]\+[[:blank:]]\+\([[:digit:]]\+\)[[:blank:]]\+.*'#'\1'#p) )
+		if [ ${#array_pid_di_pykar[@]} -eq 0 ]
+			then
+			if [ "${RIPROVATO}" = "SI" ]
+				then
+				exit 1
+			fi
+			sleep 1
+			[ "${l}" = "IT" ] && wait_for "Nessun PID di pykar trovato...\nci riprovo tra 4 secondi..."
+			[ "${l}" = "EN" ] && wait_for "No pykar PID found...\nI will retry in 4 seconds..."
+			sleep 4
+			terminate_wait_for
+			RIPROVATO="SI"
+			continue
+		elif [ ${#array_pid_di_pykar[@]} -eq 1 ]
+			then
+			break
+		elif [ ${#array_pid_di_pykar[@]} -gt 1 ]
+			then
+			[ "${l}" = "IT" ] && alert_message "Trovati\n${#array_pid_di_pykar[@]} PIDs\ndi pykar...\n\n( fai\n\"killall pykar\" )"
+			[ "${l}" = "EN" ] && alert_message "Found\n${#array_pid_di_pykar[@]} pykar\nPIDs...\n\n( please do\n\"killall pykar\" )"
+			exit 1
+		fi
+	done
+	#
+	#
+	sleep 3 && kill ${array_pid_di_pykar[0]} || echo "Oooops..."
+	#
+	#
+	sleep 2
+	IFS=$' \t\n'
+	testo_pre="$(0< "${lyric}" )"
+	if [ $(echo -n "${testo_pre}" | wc -c) -eq 0 ]
+		then
+		#
+		if [ "${l}" = "IT" ]
+			then 
+			question "Attenzione: \n il file selezionato \n non contiene le parole...  :( \n -sorry- \n\n (il file: \"${lyric}\" \n e' vuoto) \n\n\n\n Vuoi ascoltarlo \n ugualmente?"
+			risposta=${?}
+		elif [ "${l}" = "EN" ]
+			then 
+			question "Warning: \n selected file \n doesn't have words...  :( \n -sorry- \n\n (file: \"${lyric}\" \n is empty) \n\n\n\n Do you want \n play it \n the same ?"
+			risposta=${?}
+		fi
+		if [ ${risposta} -eq 0 ]
+			then
+			terminate_wait_for
+			eval timidity ${soundfont_string} -A 105 --volume-compensation -idt \"${midi}\"
+			exit 0
+		elif [ ${risposta} -eq 1 ]
+			then
+			exit 1
+		else
+			exit 1
+		fi
+		#
+	fi
+	#
+	pre_testo="$( while read linea_da_raddrizzare
+				do
+				#
+				if [ "XYZ$(echo "${linea_da_raddrizzare}" | tr -dc '[:alnum:]')" = "XYZ" ]
+					then
+					echo "${linea_da_raddrizzare}"
+				else
+					echo -n "${linea_da_raddrizzare} "
+				fi
+				#
+			done 0< "${lyric}" | gsed -e '\#^$#d' )"
+	pre_testo_di_controllo="$( while read linea_da_raddrizzare
+				do
+				#
+				if [ "XYZ$(echo "${linea_da_raddrizzare}" | tr -dc '[:alnum:]')" = "XYZ" ]
+					then
+					echo "${linea_da_raddrizzare}^"
+				else
+					echo -n "${linea_da_raddrizzare} ^"
+				fi
+				#
+			done 0< "${lyric}" | gsed -e '\#^$#d' )"
+	rm -f "${lyric}"
+	#
+	testo_di_controllo="$(echo "$(echo "${pre_testo_di_controllo}" | while read linea; do echo -n "${linea} " ; done ) ${fine_canzone}" | tr '\t' ' ' | tr -s ' ' | tr '<' ' / ' | tr '\' '/' )"
+	: testo_di_controllo
+	#
+	testo_di_controllo_per_media="$(echo "${testo_di_controllo}" | tr '^' '\n' )"
+	linee=$(echo "${testo_di_controllo_per_media}" | wc -l )
+	var_media_columns=$(echo "${testo_di_controllo_per_media}" | media_columns ${linee} )
+	if [ ${var_media_columns} -gt ${soglia} ]
+		then
+		export righe=3
+	elif [ ${var_media_columns} -le ${soglia} ]
+		then
+		export righe=2
+	fi
+	: righe 
+	#
+	testo="$(echo "$(echo "${pre_testo}" | gsed -n s\#'\(.*\).$'#'\1'#p | while read linea; do echo -n "${linea} " ; done ) ${fine_canzone}" | tr '\t' ' ' | tr -s ' ' | tr '<' ' / ' | tr '\' '/' )"
+	#
+	: testo
+	#
+	testo="$(togli_accordi "${testo}" )"
+	testo="$(togli_intestazione  "${testo}" )"
+	: testo
+	#
+	testo_di_controllo="$(togli_accordi "${testo_di_controllo}" )"
+	testo_di_controllo="$(togli_intestazione "${testo_di_controllo}" )"
+	: testo_di_controllo
+	}
+#
+#
+#
+media_columns()
+	{
+	diviso=${1}
+	v_di_w__max_columns=0
+	threshold=0
+	stringa="$(while read riga
+		do
+		v_di_w__max_columns=$(( ${v_di_w__max_columns} + 1 ))
+		if [ ${v_di_w__max_columns} -lt ${threshold} ]
+			then
+			continue
+		elif [ ${v_di_w__max_columns} -ge ${threshold} ]
+			then
+			columns=${#riga}
+			echo -n "${columns} + "
+		fi
+	done | gsed s\#' + $'#''#g )"
+	echo "$(( $(( ${stringa} )) / ${diviso} ))"
+	}
+#
+#
+#
+sposta_parole()
+	{
+	soglia_riga=${1}
+	soglia=$(( ${soglia_riga} - 1 ))
+	#
+	differenza=0
+	for (( i=1 ; ; i++ ))
+		do
+		: ====================
+		: $i
+		IFS=$'\t\n' ; read -r -n 1 car ; IFS=$' \t\n'
+		#CCCCCCCCCCCCCCCCCCCCCCC="${car}"
+		if [ "${car}" = "" ]
+			then
+			: fine_riga
+			stringa_output="${stringa}"
+			riga="${stringa_output}"
+			riga="${rimanenza_riga}${riga}"
+			#
+			echo -n "${riga}"
+			#
+			##
+			#quanti_caratteri_fr=$(echo -n "${riga}" | tr -d '^' | wc -c )
+			#echo "(FINE=>${quanti_caratteri_fr})"
+			##
+			#
+			#
+			break
+		fi
+		#echo -n "${car}"
+		stringa="${stringa}${car}"
+		#
+		#
+		: ${i}
+		: "=>"
+		[ "${car}" = "^" ] && (( i-- ))
+		: ${i}
+		: ${soglia_riga}
+		resto_divisione=$(( ${i} % ${soglia_riga} ))
+		if [ ${resto_divisione} -eq 0 ] 
+			then
+			: BINGOOOOOOOOO
+			######################################################################
+			######################################################################
+			######################################################################
+			stringa_output="${stringa}"
+			unset stringa
+			#
+			##
+			#
+			riga="${stringa_output}"
+			IFS=$' \t\n'
+			#
+			if [ ${differenza} -eq 0 ]
+				then
+				: riga
+			elif [ ${differenza} -ne 0 ]
+				then
+				: ${rimanenza_riga}
+				: +
+				: ${riga}
+				riga="${rimanenza_riga}${riga}"
+				#
+				unset rimanenza_riga
+				differenza=0
+				#
+			fi
+			#
+			#controllo_riga="${riga}"
+			quanti_caratteri=$(echo -n "${riga}" | tr -d '^' | wc -c )
+			#sleep 4
+			#
+			#let's check character # ${soglia} :
+			car_soglia="${riga:(-1):1}"
+			if [ "X${car_soglia}" = "X " -o "${#car_soglia}" = "0" -o "X${car_soglia}" = "X^" ]
+				then
+				echo -n "${riga}"
+				#
+				##
+				#quanti_caratteri_yes=$(echo -n "${riga}" | tr -d '^' | wc -c )
+				#echo "(YES=>${quanti_caratteri_yes})"
+				##
+				#
+			else
+				index_negativo="-1"
+				while [ "${riga:(${index_negativo}):1}" != "" ]
+					do
+					index_negativo=$(( ${index_negativo} - 1 ))
+					car="${riga:(${index_negativo}):1}"
+					#
+					if [ "${car}" != " " ]
+						then
+						# we didn't find the space char yet...
+						#
+						continue 1
+						#
+					elif [ "${car}" = " " ]
+						then
+						# we found it !!
+						#
+						# 1)
+						rimanenza_riga="${riga:(${index_negativo})}"
+						prima_parte_riga="${riga%${rimanenza_riga}}"
+						echo -n "${prima_parte_riga}"
+						# 
+						# 2)
+						quanti_spazi_servono_ancora=$(echo -n "${rimanenza_riga}" | tr -d '^' | wc -c )
+						for (( n=1 ; n <= ${quanti_spazi_servono_ancora} ; n++ ))
+							do
+							echo -n " "
+						done 
+						#
+						##
+						#quanti_caratteri_ppr=$(echo -n "${prima_parte_riga}" | tr -d '^' | wc -c )
+						#echo "($(( ${quanti_caratteri_ppr} + ${quanti_spazi_servono_ancora} )))"
+						##
+						#
+						#
+						# 3)
+						: rimanenza_riga
+						differenza=${quanti_spazi_servono_ancora}
+						: $i
+						i=$(( ${i} + ${differenza} ))
+						continue 2
+						#
+					fi # if [ "${car}" != " " ]
+					#
+				done # for (( car_num=${soglia} ; car_num >= 0 ; car_num-- ))
+				#
+				# Note: if flow is here, it means word is bigger than "${soglia}" (it has more chars) ...
+				echo -n "${riga}"
+				#
+				##
+				#quanti_caratteri_big=$(echo -n "${riga}" | tr -d '^' | wc -c )
+				#echo "(BIGGER=>${quanti_caratteri_big})"
+				##
+				#
+			fi # if [ "${car_soglia}" = " " -o "${car_soglia}" = "" ]
+			######################################################################
+			######################################################################
+			######################################################################
+			#
+		fi # if [ ${resto_divisione} -eq 0 ]
+		#
+	done # for (( i=1 ; ; i++ ))
+	#
+	}
+#
+#
+#
+
+#
+#
+#
+find_pid_py()
+	{
+	command_line="${1}"
+	#
+	outputta_python_script()
+		{
+		cat <<'EOScript'
+#!/usr/bin/env python
+#-*- coding:utf-8 -*-
+#
+# pygrep.py
+# Copyright (C) 2012 Davide Depau <david.dep.1996@gmail.com>
+#
+# PyGrep is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PyGrep is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program.    If not, see <http://www.gnu.org/licenses/>.
+
+import os, sys
+
+if sys.argv[1] in ("-h", "--help"):
+    print "Usage: {0} [-h,--help] [command_line]\n\nReturns the PID of the process with the given command line."
+    sys.exit(0)
+else:
+    cmdline = sys.argv[1]
+
+dirs = os.listdir("/proc")
+
+status = 1
+for d in dirs:
+    if "." in d:
+        continue
+    try:
+        int(d)
+        c = open(os.path.join("/proc", d, "cmdline"), "r")
+        cmd = c.read().replace("\x00", " ")
+        c.close()
+        if cmdline in cmd and not sys.argv[0] in cmd:
+            print d
+            status = 0
+    except ValueError:
+        pass
+
+sys.exit(status)
+EOScript
+		}
+	#
+	pid_found="$(python <(outputta_python_script ) "${command_line}" )"
+	#
+	[ ${#pid_found} -gt 0 ] && echo "${pid_found}" || echo "PID-NOT-FOUND"
+	#
+	}
+#
+#
+#
+:<<-'EOB'
+
+( Final various notes... )
+
+	#
+	########################
+	#
+	cat <<-find_file_1 1> "${find_file}"
+	# "find midi" functions:
+	export dummy_file="${dummy_file}"
+	export database="${database}"
+	export dir_Karaoke="${dir_Karaoke}"
+	
+find_file_1
+	cat <<-'find_file_2' 1>> "${find_file}"
+	find_and_write()
+		{
+		#string_to_find="modugno"
+		string_to_find="$(cat "${dummy_file}" )"
+		artist_title="$(echo "${string_to_find}" | tr -c '[[:alnum:]]' '?' | sed s\#'\?'#'\.\*'#g )"
+		list="$(cat "${database}" | sed -n "\#${artist_title}#Ip" )"
+		echo "${list}" 1> "${dir_Karaoke}/lista_karaoke.txt"
+		}
+find_file_2
+	#
+	#######################
+	#
+
+EOB
+#
+#
+#

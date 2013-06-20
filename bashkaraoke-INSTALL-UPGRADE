@@ -1,0 +1,202 @@
+#!/usr/bin/env bash
+#
+#########################
+#
+# Copyright (C) 2012 Vittorio Cagnetta
+# Copyright (C) 2012 Davide Depau
+#
+# Author: Vittorio Cagnetta <vaisarger@gmail.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 3 of the License.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with this program, 
+# called, in this distribution, "bashkaraoke-LICENSE"; if not, write to the 
+# Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+#########################
+#
+export system_bk_dir="/usr/local/share/bashkaraoke"
+export path_dir="/usr/local/bin" ; [ ! -d "${path_dir}" ] && export path_dir="/usr/bin"
+export LIB_URL="http://sites.google.com/site/easybashgui"
+export MIN_LIB_VERSION_REQUIRED="4.0.3"
+#
+#############################################
+# CHECKS
+# ...lang?
+lang="$(set | grep 'LANG=' | cut -d '=' -f 2 )"
+if [ ${#lang} -gt 0 ]
+	then
+	l="$(if [ $(echo -n "${lang}" | grep -i "it" | wc -c) -gt 0 ]
+		then
+		echo "IT"
+	else
+		echo "EN"
+	fi )"
+else
+	l="EN"
+fi
+export l
+#
+# ...are we in source directory?
+if [ ! -d "./bashkaraoke_FILES" ]
+	then
+	[ "${l}" = "IT" ] && echo -e "Devi lanciare questo programma \n nella cartella dei sorgenti \n di bashkaraoke. \n\n Per favore, \n digita \"cd /percorso/alla/cartella/dei/sorgenti\", \n quindi rilancia questo programma."
+	[ "${l}" = "EN" ] && echo -e "You must launch this program \n in bashkaraoke source directory. \n\n Please, \n type \"cd /path/to/source\" , \n then relaunch this program."
+	sleep 3
+	exit 1
+fi
+#
+# ...am I root?
+if [ "$(whoami)" != "root" ]
+	then
+	[ "${l}" = "IT" ] && echo -e "\nDevi essere \"root\". \n\n Per favore, apri un terminale, digita \"su\", quindi rilancia questo programma..."
+	[ "${l}" = "EN" ] && echo -e "\nYou must be \"root\". \n\n Please, open a terminal, type \"su\", then relaunch this program..."
+	sleep 3
+	exit 1
+fi
+#
+# ...easybashgui?
+if [ $(echo -n "$(type "easybashgui" 2>/dev/null)" | wc -c) -eq 0 ]
+	then
+	library_path="$(find ./ -name "easybashgui_?.?.?" | head -n 1 )"
+	if [ ${#library_path} -gt 0 ]
+		then
+		#
+		[ "${l}" = "IT" ] && echo -e "\n\nInstallo \"${library_path}\" in \"${path_dir}/\"...\n\n"
+		[ "${l}" = "EN" ] && echo -e "\n\Installing \"${library_path}\" in \"${path_dir}/\"...\n\n"
+		#
+		if [ -h "${path_dir}/easybashgui" ]
+			then
+			[ "${l}" = "IT" ] && echo -e "\n\nTrovato link simbolico: \"${path_dir}/easybashgui\", ma ho bisogno di cancellarlo...\n\n"
+			[ "${l}" = "EN" ] && echo -e "\n\nFound symbolic link: \"${path_dir}/easybashgui\", but I need to remove it...\n\n"
+			rm -i "${path_dir}/easybashgui"
+		fi
+		if [ -h "${path_dir}/easybashgui" ]
+			then
+			exit 1
+		fi
+		#
+		library_name="$(basename "${library_path}" )"
+		cp "${library_path}" "${path_dir}/"
+		ln -s "${path_dir}/${library_name}" "${path_dir}/easybashgui"
+		#
+	fi
+fi
+if [ $(echo -n "$(type "easybashgui" 2>/dev/null)" | wc -c ) -eq 0 ]
+	then
+	[ "${l}" = "IT" ] && echo -e "Sembra che non hai \"easybashgui\" nel tuo sistema \n oppure la libreria \"easybashgui\" non si trova nel path...\n\n\n Per favore, scaricala da ${LIB_URL}, copiala nel tuo path ( p.es.: in /usr/local/bin/ ), e linkala in questo modo: \"ln -s /usr/local/bin/easybashgui_?.?.? /usr/local/bin/easybashgui\" ." 1>&2
+	[ "${l}" = "EN" ] && echo -e "It seems you don't have \"easybashgui\" in your system \n or \"easybashgui\" library isn't in your path ...\n\n\n Please, download it from ${LIB_URL}, copy it in your path (e.g.: in /usr/local/bin/ ), and link it in this way: \"ln -s /usr/local/bin/easybashgui_?.?.? /usr/local/bin/easybashgui\" ." 1>&2
+	sleep 3
+	exit 1
+else
+	# Ok, easybashgui exists... let's check min required version...
+	: MIN_LIB_VERSION_REQUIRED
+	source easybashgui
+	: LIB_VERSION
+	IFS=$'. \t\n'
+	array_LIB_VERSION=( $(echo -n "${LIB_VERSION}" ) )
+	array_MIN_LIB_VERSION_REQUIRED=( $(echo -n "${MIN_LIB_VERSION_REQUIRED}" ) )
+	IFS=$' \t\n'
+	#
+	if [ ${array_LIB_VERSION[0]} -gt ${array_MIN_LIB_VERSION_REQUIRED[0]} ]
+		then
+		obsolete_lib="NO"
+	elif [ ${array_LIB_VERSION[0]} -lt ${array_MIN_LIB_VERSION_REQUIRED[0]} ]
+		then
+		obsolete_lib="YES"
+	elif [ ${array_LIB_VERSION[0]} -eq ${array_MIN_LIB_VERSION_REQUIRED[0]} ]
+		then
+		if [ ${array_LIB_VERSION[1]} -gt ${array_MIN_LIB_VERSION_REQUIRED[1]} ]
+			then
+			obsolete_lib="NO"
+		elif [ ${array_LIB_VERSION[1]} -lt ${array_MIN_LIB_VERSION_REQUIRED[1]} ]
+			then
+			obsolete_lib="YES"
+		elif [ ${array_LIB_VERSION[1]} -eq ${array_MIN_LIB_VERSION_REQUIRED[1]} ]
+			then
+			if [ ${array_LIB_VERSION[2]} -gt ${array_MIN_LIB_VERSION_REQUIRED[2]} ]
+				then
+				obsolete_lib="NO"
+			elif [ ${array_LIB_VERSION[2]} -lt ${array_MIN_LIB_VERSION_REQUIRED[2]} ]
+				then
+				obsolete_lib="YES"
+			elif [ ${array_LIB_VERSION[2]} -eq ${array_MIN_LIB_VERSION_REQUIRED[2]} ]
+				then
+				obsolete_lib="NO"
+				# perche' le due versioni sono ESATTAMENTE identiche...
+			fi
+			#
+		fi #if [ ${array_LIB_VERSION[1]} -gt ${array_MIN_LIB_VERSION_REQUIRED[1]} ]
+		#
+	fi #if [ ${array_LIB_VERSION[0]} -gt ${array_MIN_LIB_VERSION_REQUIRED[0]} ]
+	#
+	if [ "${obsolete_lib}" = "YES" ]
+		then
+		[ "${l}" = "IT" ] && alert_message "Sembra \n che hai \n una versione \n di \"easybashgui\" \n nel tuo sistema \n inferiore \n alla ${MIN_LIB_VERSION_REQUIRED}\n...\n\n\n\n\n Per favore, \n scarica da \n ${LIB_URL} \n una versione \n recente \n di \"easybashgui\" \n e installala \n prima \n di lanciare \n il programma... :("
+		[ "${l}" = "EN" ] && alert_message "It seems \n you have \n an \"easybashgui\" \n version \n in your system \n prior \n to ${MIN_LIB_VERSION_REQUIRED}\n...\n\n\n\n\n Please, \n download from \n ${LIB_URL} \n a recent \n \"easybashgui\" \n version \n and install it \n first... :("
+		clean_temp
+		exit 1
+	fi
+fi
+#
+#
+#############################################
+#
+# PHEWWWWWW!!!... EVERYTHING'S OK!!!    :-)
+[ "${l}" = "IT" ] && wait_for "Attendere prego..."
+[ "${l}" = "EN" ] && wait_for "Please wait..."
+
+sleep 1 # ...let's go ahead: only *4* steps :
+# 1)
+for file in "./bashkaraoke" "./bashkar" "./bashkaraoke_FILES/bashkaraoke_COMMON" "./bashkaraoke_FILES/bashkaraoke_CORE" "./bashkaraoke_FILES/bashkaraoke_OUT" "./bashkaraoke_FILES/bashkaraoke_EXTRACTOR"
+	do
+	chmod 755 "${file}"
+done && chmod 644 ./bashkaraoke_FILES/*.xpm ./bashkaraoke_FILES/*.png ./bashkaraoke_FILES/*.svg
+#
+# 2)
+mkdir -p "${system_bk_dir}"
+#
+# 3)
+cp -fR "./bashkaraoke_FILES" "${system_bk_dir}/" ; chmod 777 "${system_bk_dir}/bashkaraoke_FILES"
+#
+# 4)
+cp "./bashkaraoke" "./bashkar" "${path_dir}/"
+[ -f "${path_dir}/bk-extractor" ] && rm "${path_dir}/bk-extractor" ; \
+[ ! -e "${path_dir}/bk-extractor" ] && ln -s "${system_bk_dir}/bashkaraoke_FILES/bashkaraoke_EXTRACTOR" "${path_dir}/bk-extractor"
+#
+#############################################
+# Only for older versions' rc-files ...
+bk_rc=".bashkaraoke.rc"
+array__users_homes=( $(find /home -maxdepth 1 -type d | grep -v "^/home$") $(find /usr/home -maxdepth 1 -type d | grep -v "^/usr/home$") )
+exec 2>/dev/null
+terminate_wait_for
+for (( index=0 ; index < ${#array__users_homes[@]} ; index++ ))
+	do
+	user_home="${array__users_homes[${index}]}"
+	array__bk_rc=( $(find ${user_home} -maxdepth 2 -name "${bk_rc}" ) )
+	for (( index2=0 ; index2 < ${#array__bk_rc[@]} ; index2++ ))
+		do
+		bk_rc_path="${array__bk_rc[${index2}]}"
+		gsed s\#"export colonne="#"export columns="# 0< "${bk_rc_path}" 1> "${bk_rc_path}_TEMP"
+		mv -f "${bk_rc_path}_TEMP" "${bk_rc_path}"
+		chmod 666 "${bk_rc_path}"
+	done
+	#
+	echo PROGRESS && sleep 1
+	#
+done | progress "...Check..." ${#array__users_homes[@]}
+#
+#############################################
+#
+[ "${l}" = "IT" ] && ok_message "Installazione terminata \n con successo ! \n\n Grazie per aver installato \n Bash!Karaoke ! \n\n Puoi lanciarlo, \n in un terminale, \n digitando : \n \"bashkaraoke\" \n dopodiche', \n non dimenticarti \n di configurare \n il font... \n\n\n Divertiti !   ;-)"
+[ "${l}" = "EN" ] && ok_message "Bash!Karaoke successfully installed ! \n\n Thanks for installing \n Bash!Karaoke ! \n\n You would launch it, \n in a terminal, \n typing : \n \"bashkaraoke\" \n after that, \n don't forget \n to configure font...\n\n\n Enjoy !   ;-)" 
+#
+clean_temp
+
