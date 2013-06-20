@@ -46,7 +46,7 @@ start_dir="$(pwd)"
 	export bk_name="bashkar" ; export bk="$(type -P "${bk_name}" )" ; \
 						[ -f "${bk}" ] && : || bk="$(pwd)/${bk_name}"
 						[ -f "${bk}" ] && : || { alert_message "ERR.: \n NO ${bk_name} !" ; exit 1 ; }
-	export bk_extractor_name="bk-extractor"; export bk_extractor="$(type -P "${bk_extractor_name}" )" ; \
+	export bk_extractor_name="bashkaraoke_EXTRACTOR"; export bk_extractor="$(type -P "${bk_extractor_name}" )" ; \
 						[ -e "${bk_extractor}" ] && : || bk_extractor="$(pwd)/${bk_extractor_name}"
 						[ -e "${bk_extractor}" ] && : || { alert_message "ERR.: \n NO ${bk_extractor_name} !" ; exit 1 ; }
 	export bk_OUT_name="bashkaraoke_OUT"; export bk_OUT="$(type -P "${bk_OUT_name}" )" ; \

@@ -2,8 +2,8 @@
 #
 #########################
 #
-# Copyright (C) 2012 Vittorio Cagnetta
-# Copyright (C) 2012 Davide Depau
+# Copyright (C) 2013 Vittorio Cagnetta
+# Copyright (C) 2013 Davide Depau
 #
 # Author: Vittorio Cagnetta <vaisarger@gmail.com>
 #
@@ -24,7 +24,7 @@
 #
 export system_bk_dir="/usr/local/share/bashkaraoke"
 export path_dir="/usr/local/bin" ; [ ! -d "${path_dir}" ] && export path_dir="/usr/bin"
-export LIB_URL="http://sites.google.com/site/easybashgui"
+export LIB_URL="https://github.com/BashGui/easybashgui/tags"
 export MIN_LIB_VERSION_REQUIRED="4.0.3"
 #
 #############################################
@@ -63,38 +63,12 @@ if [ "$(whoami)" != "root" ]
 fi
 #
 # ...easybashgui?
-if [ $(echo -n "$(type "easybashgui" 2>/dev/null)" | wc -c) -eq 0 ]
-	then
-	library_path="$(find ./ -name "easybashgui_?.?.?" | head -n 1 )"
-	if [ ${#library_path} -gt 0 ]
-		then
-		#
-		[ "${l}" = "IT" ] && echo -e "\n\nInstallo \"${library_path}\" in \"${path_dir}/\"...\n\n"
-		[ "${l}" = "EN" ] && echo -e "\n\Installing \"${library_path}\" in \"${path_dir}/\"...\n\n"
-		#
-		if [ -h "${path_dir}/easybashgui" ]
-			then
-			[ "${l}" = "IT" ] && echo -e "\n\nTrovato link simbolico: \"${path_dir}/easybashgui\", ma ho bisogno di cancellarlo...\n\n"
-			[ "${l}" = "EN" ] && echo -e "\n\nFound symbolic link: \"${path_dir}/easybashgui\", but I need to remove it...\n\n"
-			rm -i "${path_dir}/easybashgui"
-		fi
-		if [ -h "${path_dir}/easybashgui" ]
-			then
-			exit 1
-		fi
-		#
-		library_name="$(basename "${library_path}" )"
-		cp "${library_path}" "${path_dir}/"
-		ln -s "${path_dir}/${library_name}" "${path_dir}/easybashgui"
-		#
-	fi
-fi
 if [ $(echo -n "$(type "easybashgui" 2>/dev/null)" | wc -c ) -eq 0 ]
 	then
 	[ "${l}" = "IT" ] && echo -e "Sembra che non hai \"easybashgui\" nel tuo sistema \n oppure la libreria \"easybashgui\" non si trova nel path...\n\n\n Per favore, scaricala da ${LIB_URL}, copiala nel tuo path ( p.es.: in /usr/local/bin/ ), e linkala in questo modo: \"ln -s /usr/local/bin/easybashgui_?.?.? /usr/local/bin/easybashgui\" ." 1>&2
 	[ "${l}" = "EN" ] && echo -e "It seems you don't have \"easybashgui\" in your system \n or \"easybashgui\" library isn't in your path ...\n\n\n Please, download it from ${LIB_URL}, copy it in your path (e.g.: in /usr/local/bin/ ), and link it in this way: \"ln -s /usr/local/bin/easybashgui_?.?.? /usr/local/bin/easybashgui\" ." 1>&2
 	sleep 3
-	exit 1
+	#exit 1
 else
 	# Ok, easybashgui exists... let's check min required version...
 	: MIN_LIB_VERSION_REQUIRED
