@@ -25,11 +25,12 @@ all "lyric extraction -> ( midi playing & text tracing )" entire task performed 
 
 Other karaoke files are waiting a player... ;-)
 
-Since version 5.0.0 there is a python script also called "bashkaraoke-gtk" adding fullscreen feature to program.
+Since version 5.0.0 we are working to add fullscreen feature to program, but it's still in development.
 
 
 
 CHANGELOG :
+- 7.0.0 -> BashKaraoke is housed in GitHub
 - 6.0.0 -> backend is modularized: Timidity becomes one of many possible backends, database changed, *OUT (-i option) updates database rows
 - 5.9.9 -> *OUT uses play() function in *CORE (no more redundancy), little improvements
 - 5.0.0 -> fullscreen ("GTK mode") added !!!!
@@ -71,7 +72,7 @@ Eight dependencies.
 5) gsed =GNUsed 
    ( only for *BSD users: please, install "gsed" port ...)
 6) mktemp
-7) gtkdialog or Xdialog or kdialog or zenity or (c)dialog
+7) yad or gtkdialog or Xdialog or kdialog or zenity or (c)dialog
 8) X windows up and running
 
 
@@ -156,6 +157,7 @@ THANKS :
 16) Maxbigsi from Ubuntu Forum (it) for testing and ideas ...
 17) Matteo Avalle and Valerio Billera for their nice interface "BUC"...
 18) Thunor for his nice interface "Gtkdialog"...
+19) GitHub for housing B!K project...
 
 
 
@@ -215,6 +217,7 @@ Dalla versione 5.0.0 esiste anche lo script python "bashkaraoke-gtk" che aggiung
 
 
 CHANGELOG :
+- 7.0.0 -> BashKaraoke è ospitato in GitHub
 - 6.0.0 -> il backend e' modularizzato: Timidity diventa uno dei tanti backends possibili, il database e' cambiato, *OUT (opzione -i) aggiorna le righe del database 
 - 5.9.9 -> *OUT usa la funzione play() nel *CORE (non c'e' piu' ridondanza), piccoli miglioramenti
 - 5.0.0 -> aggiunto il fullscreen ("modo GTK") !!!!
@@ -256,7 +259,7 @@ Otto dipendenze.
 5) gsed =GNUsed 
    ( solo per gli utenti *BSD : per favore, installate il port "gsed" ... )
 6) mktemp
-7) gtkdialog oppure Xdialog oppure kdialog oppure zenity oppure (c)dialog
+7) yad oppure gtkdialog oppure Xdialog oppure kdialog oppure zenity oppure (c)dialog
 8) X windows in esecuzione e funzionante
 
 
@@ -340,6 +343,7 @@ RINGRAZIAMENTI :
 16) Maxbigsi del forum di Ubuntu (it) per il testing e le idee ...
 17) Matteo Avalle e Valerio Billera per la graziosa interfaccia "BUC"...
 18) Thunor per la graziosa interfaccia "Gtkdialog"...
+19) GitHub per ospitare il progetto B!K...
 
 
 
