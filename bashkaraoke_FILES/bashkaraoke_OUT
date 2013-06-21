@@ -31,13 +31,13 @@ if [ ${#BK_VERSION_NUMBER} -eq 0 ]
 	FORCED_SOURCING="YES"
 	start_dir="$(pwd)"
 	system_bk_dir_CORE="/usr/local/share/bashkaraoke/bashkaraoke_FILES"
-	if [ -d "${system_bk_dir_CORE}" ]
-		then
-		dir_CORE="${system_bk_dir_CORE}"
-	else
+	#if [ -d "${system_bk_dir_CORE}" ]
+	#	then
+	#	dir_CORE="${system_bk_dir_CORE}"
+	#else
 		[ -f "${0}" ] && \
 		dir_CORE="$(dirname "${0}" )"
-	fi
+	#fi
 	#
 	[ ! -d "${dir_CORE}" ] && echo -e "\nErr.: var. \"\${dir_CORE}\" is empty...\n\n" && sleep 3 && exit 1
 	#
@@ -557,22 +557,19 @@ elif [ "${output_mode}" = "h" ]
 		</style>
 		<!-- ------------------------------------------------ -->
 		
-		<!-- Sezione refresh della pagina in secondi o 0.0 meno... -->
-		<!-- <meta http-equiv="refresh" content="2"/> -->
+		<!-- Sezione refresh della pagina in secondi interi o con decimale (es.: 1.2) -->
 		<meta http-equiv="refresh" content="0.3"/> 
-		<!-- refresh della pagina in secondi o 0.0 meno... -->
+		<!-- ------------------------------------------------ -->
 	</head>
 	<body>
 		<div class="textBox" >
 			<span>'
 	#
-	export foreground_1="fg_1"
-	export fg_1="				<font class=\"color_sing\">"
-	export foreground_1_bis="</font>"
+	export foreground_html_0="<font class=\"color_old\">"
 	#
-	export foreground_2="fg_2"
-	export fg_2="				<font class=\"color_next\">"
-	export foreground_2_bis="</font><br>"
+	export foreground_html_1="<font class=\"color_sing\">"
+	#
+	export foreground_html_2="<font class=\"color_next\">"
 	#
 	export coda_HTML='			</span>
 		</div>

@@ -132,12 +132,13 @@ if [ "${output_mode}" = "n" ]
 elif [ "${output_mode}" = "h" ]
 	then
 	#
-	export foreground_1="fg_1"
-	export fg_1="				<font class=\"color_sing\">"
+	export foreground_0="foreground_html_0"
+	export foreground_0_bis="</font><br>"
+	#
+	export foreground_1="foreground_html_1"
 	export foreground_1_bis="</font>"
 	#
-	export foreground_2="fg_2"
-	export fg_2="				<font class=\"color_next\">"
+	export foreground_2="foreground_html_2"
 	export foreground_2_bis="</font><br>"
 	#
 	export rows="3"
@@ -336,7 +337,10 @@ play()
 	#
 	IFS=""
 	#
-	echo "!?BASH!KARAOKE!?" | tee "${output_file:-/dev/null}"
+	if [ "${output_mode}" = "s" ]
+		then
+		echo "!?BASH!KARAOKE!?" | tee "${output_file:-/dev/null}"
+	fi
 	[ ${#output_file} -eq 0 ] && echo -en "${!foreground_2}${testo:0:$(( 3 * ${columns} ))}\r"
 	#
 	####
@@ -526,7 +530,7 @@ play()
 							{
 							[ "${output_mode}" = "h" ] && echo "${intestazione_HTML}"
 							#
-							echo -e "${!foreground_1}${testo:${quante_volte_per_columns__pre}:${columns}}${foreground_1_bis}"
+							echo -e "${!foreground_0}${testo:${quante_volte_per_columns__pre}:${columns}}${foreground_0_bis}"
 							#
 							echo -en "${!foreground_1}${testo:${quante_volte_per_columns}:${resto}}${foreground_1_bis}"
 							echo -e "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${resto})):$(( ${columns} - ${resto} ))}${foreground_2_bis}"
