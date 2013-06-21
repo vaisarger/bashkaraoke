@@ -31,13 +31,13 @@ if [ ${#BK_VERSION_NUMBER} -eq 0 ]
 	FORCED_SOURCING="YES"
 	start_dir="$(pwd)"
 	system_bk_dir_CORE="/usr/local/share/bashkaraoke/bashkaraoke_FILES"
-	#if [ -d "${system_bk_dir_CORE}" ]
-	#	then
-	#	dir_CORE="${system_bk_dir_CORE}"
-	#else
+	if [ -d "${system_bk_dir_CORE}" ]
+		then
+		dir_CORE="${system_bk_dir_CORE}"
+	else
 		[ -f "${0}" ] && \
 		dir_CORE="$(dirname "${0}" )"
-	#fi
+	fi
 	#
 	[ ! -d "${dir_CORE}" ] && echo -e "\nErr.: var. \"\${dir_CORE}\" is empty...\n\n" && sleep 3 && exit 1
 	#
