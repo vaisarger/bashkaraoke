@@ -22,9 +22,9 @@
 #
 #########################
 #
-export system_bk_dir="/usr/local/share/bashkaraoke"
+export system_bk_dir="/usr/share/bashkaraoke"
 export dir_Karaoke=".bashkaraoke"
-export path_dir="/usr/local/bin" ; [ ! -d "${path_dir}" ] && export path_dir="/usr/bin"
+export path_dir="/usr/bin"
 source easybashgui
 #
 #############################################
@@ -75,7 +75,7 @@ for dir in "${system_bk_dir}" $(for ((i=0 ; i < ${#array_home_dirs[@]} ; i++)); 
 	do
 	if [ -d "${dir}" ]
 		then
-		if [ "${dir}" != "/" -a "${dir}" != "/usr/local/share" -a "${dir}" != "${HOME}" ]
+		if [ "${dir}" != "/" -a "${dir}" != "/usr/share" -a "${dir}" != "${HOME}" ]
 			then
 			if [ "${l}" = "IT" ]
 				then

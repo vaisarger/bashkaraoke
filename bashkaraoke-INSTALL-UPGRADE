@@ -22,8 +22,8 @@
 #
 #########################
 #
-export system_bk_dir="/usr/local/share/bashkaraoke"
-export path_dir="/usr/local/bin" ; [ ! -d "${path_dir}" ] && export path_dir="/usr/bin"
+export system_bk_dir="/usr/share/bashkaraoke"
+export path_dir="/usr/bin"
 export LIB_URL="https://github.com/BashGui/easybashgui/tags"
 export MIN_LIB_VERSION_REQUIRED="4.0.3"
 #
@@ -139,33 +139,12 @@ mkdir -p "${system_bk_dir}"
 #
 # 3)
 cp -fR "./bashkaraoke_FILES" "${system_bk_dir}/" ; chmod 777 "${system_bk_dir}/bashkaraoke_FILES"
+cp -fR "./realtime_dialog_0.1" "${system_bk_dir}/" ; chmod 777 "${system_bk_dir}/realtime_dialog_0.1" ; chmod 755 "${system_bk_dir}/realtime_dialog_0.1/realtime_dialog.py"
 #
 # 4)
 cp "./bashkaraoke" "./hyperkar" "./xtermkar" "${path_dir}/"
 [ -f "${path_dir}/bk-extractor" ] && rm "${path_dir}/bk-extractor" ; \
 [ ! -e "${path_dir}/bk-extractor" ] && ln -s "${system_bk_dir}/bashkaraoke_FILES/bashkaraoke_EXTRACTOR" "${path_dir}/bk-extractor"
-#
-#############################################
-# Only for older versions' rc-files ...
-bk_rc=".bashkaraoke.rc"
-array__users_homes=( $(find /home -maxdepth 1 -type d | grep -v "^/home$") $(find /usr/home -maxdepth 1 -type d | grep -v "^/usr/home$") )
-exec 2>/dev/null
-terminate_wait_for
-for (( index=0 ; index < ${#array__users_homes[@]} ; index++ ))
-	do
-	user_home="${array__users_homes[${index}]}"
-	array__bk_rc=( $(find ${user_home} -maxdepth 2 -name "${bk_rc}" ) )
-	for (( index2=0 ; index2 < ${#array__bk_rc[@]} ; index2++ ))
-		do
-		bk_rc_path="${array__bk_rc[${index2}]}"
-		gsed s\#"export colonne="#"export columns="# 0< "${bk_rc_path}" 1> "${bk_rc_path}_TEMP"
-		mv -f "${bk_rc_path}_TEMP" "${bk_rc_path}"
-		chmod 666 "${bk_rc_path}"
-	done
-	#
-	echo PROGRESS && sleep 1
-	#
-done | progress "...Check..." ${#array__users_homes[@]}
 #
 #############################################
 #
