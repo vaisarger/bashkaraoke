@@ -2775,14 +2775,14 @@ go_bk()
 		[ ! -d "${HTML_file_to_read__directory_path}"/css ] && mkdir "${HTML_file_to_read__directory_path}"/css
 		cd "${HTML_file_to_read__directory_path}"/css
 		[ ! -f "css_karaoke.css" ] && ouputta_css 1> css_karaoke.css
-		cd -
+		cd - 1>/dev/null
 		#
 		[ ! -d "${HTML_file_to_read__directory_path}"/js ] && mkdir "${HTML_file_to_read__directory_path}"/js
 		cd "${HTML_file_to_read__directory_path}"/js
 		[ ! -f "config.js" ] && ouputta_configjs 1> config.js
 		[ ! -f "jquery.min.js" ] && ouputta_jqueryminjs 1> jquery.min.js
 		[ ! -f "jquery.textfill.min.js" ] && ouputta_jquerytextfillmin 1> jquery.textfill.min.js
-		cd -
+		cd - 1>/dev/null
 		#
 		##
 		#
@@ -2794,15 +2794,16 @@ go_bk()
 		#
 		##
 		#
-		${bk_OUT} -o h -f "${HTML_file_to_read}" "${midi}" &
-		sleep 1 #ZUZZA
 		if [ "${bkbrowser}" = "${embedded_browser}" ]
 			then
-			#${bkbrowser} -f "${HTML_file_to_read}"
-			/usr/home/cagnettav/bin/midori file://"${HTML_file_to_read}"
+			${bkbrowser} -f "${HTML_file_to_read}"
 		else
 			${bkbrowser} file://"${HTML_file_to_read}"
-		fi
+		fi &
+		#
+		sleep 1 #ZUZZA
+		#
+		exec xterm -title "Playing: $(basename "${midi}" | iconv -f "${char_encoding}" )" -geometry 60x1 -e "${bk_OUT}" -o h -f "${HTML_file_to_read}" "${midi}"
 		}
 	#
 	##
