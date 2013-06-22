@@ -2785,11 +2785,11 @@ go_bk()
 			bkbrowser="${embedded_browser}" 
 		fi
 		#
-		##  #ZUZZA
+		##
 		#
 		if [ "${bkbrowser}" = "${embedded_browser}" ]
 			then
-			embedded_browser_dir="$(dirname "${embedded_browser}" )"
+			embedded_browser_dir="$(dir "${embedded_browser}" )"
 			cd "${embedded_browser_dir}"
 			./$(basename "${bkbrowser}" ) -f "${HTML_file_to_read}"
 			uscita_di_embedded_browser="${?}"
@@ -2803,7 +2803,7 @@ go_bk()
 			${bkbrowser} file://"${HTML_file_to_read}"
 		fi &
 		#
-		sleep 1
+		sleep 1 #ZUZZA
 		#
 		exec xterm -title "Playing: $(basename "${midi}" | iconv -f "${char_encoding}" )" -geometry 60x1 -e "${bk_OUT}" -o h -f "${HTML_file_to_read}" "${midi}"
 		}

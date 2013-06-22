@@ -540,7 +540,7 @@ elif [ "${output_mode}" = "n" ]
 elif [ "${output_mode}" = "h" ]
 	then
 	#
-	export intestazione_HTML_old='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	export intestazione_HTML='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 	<head>
 	        <title>BashKaraoke HTML window</title>
@@ -558,21 +558,12 @@ elif [ "${output_mode}" = "h" ]
 		<!-- ------------------------------------------------ -->
 		
 		<!-- Sezione refresh della pagina in secondi interi o con decimale (es.: 1.2) -->
-		<meta http-equiv="refresh" content="0.2"/> 
+		<meta http-equiv="refresh" content="0.3"/> 
 		<!-- ------------------------------------------------ -->
 	</head>
 	<body>
 		<div class="textBox" >
 			<span>'
-	export intestazione_HTML='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>BashKaraoke HTML window</title>
-<script src="js/jquery.min.js"></script>   
-<script src="js/jquery.textfill.min.js"></script>   
-<script src="js/config.js"></script>
-<style type="text/css" title="currentStyle">
-@import "css/css_karaoke.css";
-</style><meta http-equiv="refresh" content="0.2"/></head><body><div class="textBox" ><span>'
 	#
 	export foreground_html_0="<font class=\"color_old\">"
 	#
@@ -580,7 +571,10 @@ elif [ "${output_mode}" = "h" ]
 	#
 	export foreground_html_2="<font class=\"color_next\">"
 	#
-	export coda_HTML='</span></div></body></html>'
+	export coda_HTML='			</span>
+		</div>
+	</body>
+</html>'
 	#
 fi
 : font_family_string
