@@ -146,9 +146,9 @@ export extensions_var="${timidity_extensions_var} ${OTHER_karaoke_type_extension
 #
 ##
 #
-default_background="white"
-default_foreground_1="red"
-default_foreground_2="black"
+default_background="black"
+default_foreground_1="yellow"
+default_foreground_2="red"
 #
 ##
 #
