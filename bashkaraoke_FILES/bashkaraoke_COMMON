@@ -591,14 +591,7 @@ crea_rc_default()
 	#
 	cat <<-EOB1
 	export bkbrowser="embedded"
-	export use_gtk="$(
-			if [ "${bashkaraoke_gtk}" = "SI" ]
-				then
-				echo -n "true"
-			else
-				echo -n "false"
-			fi 
-			)"
+	export use_gtk="false"
 	export use_gsw="$(
 			if [ "${bashkaraoke_gtk}" = "NO" -a "${gtkdialog}" = "SI" ]
 				then
@@ -2796,8 +2789,11 @@ go_bk()
 		#
 		if [ "${bkbrowser}" = "${embedded_browser}" ]
 			then
+			embedded_browser_dir="$(dir "${embedded_browser}" )"
+			cd "${embedded_browser_dir}"
 			${bkbrowser} -f "${HTML_file_to_read}"
 			uscita_di_embedded_browser="${?}"
+			cd - 1>/dev/null
 			if [ ${uscita_di_embedded_browser} -ne 0 ]
 				then
 				[ "${l}" = "IT" ] && alert_message "Sembra che il browser \"embedded\" \n sia uscito inaspettatamente. \n Per favore, nota che esso \n ha bisogno di Python e Webkit \n per funzionare. \n\n Potresti considerare \n di cambiare \n il browser di fullscreen \n in bashkaraoke \n -> \"CONFIGURA\" -> \"Varie...\""

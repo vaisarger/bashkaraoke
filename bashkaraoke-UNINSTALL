@@ -69,6 +69,12 @@ for file in "${path_dir}/bashkaraoke" "${path_dir}/hyperkar" "${path_dir}/xtermk
 		exit 1
 	fi
 done
+for old in /usr/local/bin/bashkaraoke /usr/local/bin/bashkar /usr/local/bin/bk-extractor
+	do
+	[ -f "${old}" ] && rm "${old}"
+	:
+done
+#
 # 2)
 IFS=$'\n' ; array_home_dirs=( $(ls -1 /home ) ) ; IFS=$' \t\n'
 for dir in "${system_bk_dir}" $(for ((i=0 ; i < ${#array_home_dirs[@]} ; i++)); do echo -n "/home/${array_home_dirs[${i}]}/${dir_Karaoke} " ; done )
@@ -99,6 +105,7 @@ for dir in "${system_bk_dir}" $(for ((i=0 ; i < ${#array_home_dirs[@]} ; i++)); 
 	fi #
 	#
 done
+[ -d "/usr/local/share/bashkaraoke" ] && rm -fR /usr/local/share/bashkaraoke
 #
 ok_message "BashKaraoke unistalled."
 clean_temp
