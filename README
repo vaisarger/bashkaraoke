@@ -84,12 +84,13 @@ Type in a terminal:
 >chmod 755 ./bashkaraoke-INSTALL-UPGRADE
 >sudo ./bashkaraoke-INSTALL-UPGRADE
 __That's it !__
-(Since vers. 3.4.1 is available a deb package: you would use that one if you are a Debian/Ubuntu user...)
 
 You can launch Bash!Karaoke typing in a terminal:
 >bashkaraoke
-Or, if you want only the player:
->bashkar <midi file>(opt.) ( -not fullscreen- ) :
+Otherwise, if you want only the bare player:
+>hyperkar <midi file>(opt.)
+or
+>xtermkar <midi file>(opt.) ( -not fullscreen- )
 
 
 
@@ -97,8 +98,9 @@ USE :
 Bash!Karaoke is four programs:
 1) bashkaraoke-gtk ( fullscreen interface )
 2) bashkaraoke ( songs database manager, player configurator & frontend -not fullscreen- )
-3) bashkar ( the bare "player" -not fullscreen- )
-4) bk-extractor ( it extracts song lyric )
+3) hyperkar ( the bare "player" -fullscreen- )
+4) xtermkar ( the bare "player" -not fullscreen- )
+5) bk-extractor ( it extracts song lyric )
 
 First of all, launch bashkaraoke, you will see the main menu. 
 Before to sing, you have to configure the player a little  :-P  ... 
@@ -139,7 +141,7 @@ Four limitations/bugs:
 
 THANKS :
 1) my wife Angela and my children Nicole and Carlo for patience and testing ...
-2) Davide Depau/Davideddu from Ubuntu forum (it) for its wonderful GTK interface ...
+2) Davide Depau/Davideddu from Ubuntu forum (it) for his python/webkit "browser embedded" ...
 3) Giuseppe Cappuccio for its wonderful artwork ( icons and graphics ) ...
 4) Mendel Cooper for Advanced Bash Scripting: thank you Mendel, your work it's all my knowledge ...
 5) Izumo Masanao and all timidity people because bashkaraoke needs a backend, and timidity is great ...
@@ -157,6 +159,7 @@ THANKS :
 17) Matteo Avalle and Valerio Billera for their nice interface "BUC"...
 18) Thunor for his nice interface "Gtkdialog"...
 19) GitHub for housing B!K project...
+20) Stefano Di Vito for Javascript files, without them HTML player would not work...
 
 
 
@@ -273,8 +276,10 @@ Digita in un terminale:
 
 Puoi lanciare Bash!Karaoke digitando in un terminale:
 >bashkaraoke
-Oppure, se vuoi solo il player ( -non fullscreen- ) :
->bashkar <midi file>(opzionale)
+Altrimenti, se vuoi giusto il semplice player :
+>hyperkar <midi file>(opt.)
+oppure
+>xtermkar <midi file>(opt.) ( -not fullscreen- )
 
 
 
@@ -282,8 +287,9 @@ USO :
 Bash!Karaoke consta di quattro programmi:
 1) bashkaraoke-gtk ( interfaccia fullscreen )
 1) bashkaraoke ( gestore del database delle canzoni, configuratore del lettore & frontend del lettore -non fullscreen- )
-2) bashkar ( il mero "lettore" -non fullscreen- )
-3) bk-extractor ( estrae il testo delle canzoni )
+3) hyperkar ( il semplice "lettore" -fullscreen- )
+4) xtermkar ( il semplice "lettore" -non fullscreen- )
+5) bk-extractor ( estrae il testo delle canzoni )
 
 Prima di tutto, lancia bashkaraoke, vedrai il menu principale. 
 Prima di buttarti subito a cantare, devi configurare il lettore un po' :-P ... 
@@ -324,7 +330,7 @@ Quattro limiti/bugs:
 
 RINGRAZIAMENTI :
 1) mia moglie Angela ed i miei figli Nicole e Carlo per la pazienza e le prove ...
-2) Davide Depau/Davideddu del forum di Ubuntu (it) per la meravigliosa interfaccia GTK...
+2) Davide Depau/Davideddu del forum di Ubuntu (it) per il "browser embedded" python/webkit ...
 3) Giuseppe Cappuccio per il suo meraviglioso lavoro artistico ( icone e disegni ) ...
 4) Mendel Cooper per Advanced Bash Scripting: grazie Mendel, il tuo lavoro e' tutto il mio sapere ...
 5) Izumo Masanao e tutta la gente legata a timidity perche' bashkaraoke ha bisogno di un backend, e timidity e' troppo forte ...
@@ -342,6 +348,7 @@ RINGRAZIAMENTI :
 17) Matteo Avalle e Valerio Billera per la graziosa interfaccia "BUC"...
 18) Thunor per la graziosa interfaccia "Gtkdialog"...
 19) GitHub per ospitare il progetto B!K...
+20) Stefano Di Vito per i files in Javascript, senza i quali il lettore HTML non funzionerebbe...
 
 
 

@@ -42,6 +42,8 @@ export log_file=".bashkaraoke.log"
 export timidity_log_file=".timidity.log"
 export version_file=".version"
 export pid_file=".pid"
+export xterm_karaoke_scriptname="xtermkar"
+export HTML_karaoke_scriptname="hyperkar"
 #
 rc_file=".bashkaraoke.rc"
 if [ -f "${dir_Karaoke}/.bash!karaoke.rc" ]
@@ -3310,9 +3312,9 @@ BLOCCO_bkXbuc_1
 				[ "${l}" = "EN" ] && echo "CHOOSE player..."
 				</code>
 			</label>
-			<button text="bashkar">
+			<button text="${xterm_karaoke_scriptname}">
 				<code>
-				player="bashkar"
+				player="${xterm_karaoke_scriptname}"
 				if [ $(which "${player}" | wc -c ) -eq 0 ]
 					then
 					[ "${l}" = "IT" ] && echo "Err.: \"${player}\" non trovato..."
@@ -3323,11 +3325,32 @@ BLOCCO_bkXbuc_1
 				if [ -f "${midi}" ]
 					then
 					export LD_LIBRARY_PATH="/usr/lib"
-					bashkar "${midi}" &
+					${xterm_karaoke_scriptname} "${midi}" &
 					:
 				else
 					[ "${l}" = "IT" ] && echo "Err.: \"${midi}\" non esiste..."
-					[ "${l}" = "EN" ] && echo "Err.: \"${midi}\" doesn't exist..."
+					[ "${l}" = "EN" ] && echo "Err.: \"${midi}\" does not exist..."
+				fi
+				</code>
+			</button>
+			<button text="${HTML_karaoke_scriptname}">
+				<code>
+				player="${HTML_karaoke_scriptname}"
+				if [ $(which "${player}" | wc -c ) -eq 0 ]
+					then
+					[ "${l}" = "IT" ] && echo "Err.: \"${player}\" non trovato..."
+					[ "${l}" = "EN" ] && echo "Err.: \"${player}\" not found..."
+				fi
+				#
+				midi="$(echo "${midi}" | sed s\#'^~'#"${HOME}"# )"
+				if [ -f "${midi}" ]
+					then
+					export LD_LIBRARY_PATH="/usr/lib"
+					${HTML_karaoke_scriptname} "${midi}" &
+					:
+				else
+					[ "${l}" = "IT" ] && echo "Err.: \"${midi}\" non esiste..."
+					[ "${l}" = "EN" ] && echo "Err.: \"${midi}\" does not exist..."
 				fi
 				</code>
 			</button>
@@ -4479,8 +4502,14 @@ export GSW_LIST_DIALOG="
 				</table>
 				<hbox>
 					<button>
-						<label>bashkar</label>
-						<action type="command">bashkar "$CHOISES"</action>
+						<label>${xterm_karaoke_scriptname}</label>
+						<action type="command">${xterm_karaoke_scriptname} "$CHOISES"</action>
+						<action type="closewindow">GSW_SEARCH_DIALOG</action>
+						<action type="closewindow">GSW_LIST_DIALOG</action>
+					</button>
+					<button>
+						<label>${HTML_karaoke_scriptname}</label>
+						<action type="command">${HTML_karaoke_scriptname} "$CHOISES"</action>
 						<action type="closewindow">GSW_SEARCH_DIALOG</action>
 						<action type="closewindow">GSW_LIST_DIALOG</action>
 					</button>
@@ -4582,8 +4611,12 @@ export GSW_FILE_DIALOG="
 				</frame>
 				<hbox>
 					<button>
-						<label>bashkar</label>
-						<action type="command">bashkar "$FILE_TO_PLAY"</action>
+						<label>${xterm_karaoke_scriptname}</label>
+						<action type="command">${xterm_karaoke_scriptname} "$FILE_TO_PLAY"</action>
+					</button>
+					<button>
+						<label>${HTML_karaoke_scriptname}</label>
+						<action type="command">${HTML_karaoke_scriptname} "$FILE_TO_PLAY"</action>
 					</button>
 					<button>
 						<label>pykar</label>

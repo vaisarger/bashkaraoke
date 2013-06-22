@@ -59,7 +59,7 @@ fi
 #############################################
 #
 # 1)
-for file in "${path_dir}/bashkaraoke" "${path_dir}/bashkar" "${path_dir}/bk-extractor"
+for file in "${path_dir}/bashkaraoke" "${path_dir}/hyperkar" "${path_dir}/xtermkar" "${path_dir}/bk-extractor"
 	do
 	if [ -f "${file}" ]
 		then

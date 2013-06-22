@@ -43,9 +43,12 @@ start_dir="$(pwd)"
 	[ ${#columns} -eq 0 ] && columns=${colonne} ; [ ${#delimiter} -eq 0 ] && delimiter="______________________________________"
 	##
 	#
-	export bk_name="bashkar" ; export bk="$(type -P "${bk_name}" )" ; \
+	export bk_name="${xterm_karaoke_scriptname}" ; export bk="$(type -P "${bk_name}" )" ; \
 						[ -f "${bk}" ] && : || bk="$(pwd)/${bk_name}"
 						[ -f "${bk}" ] && : || { alert_message "ERR.: \n NO ${bk_name} !" ; exit 1 ; }
+	export hk_name="${HTML_karaoke_scriptname}" ; export hk="$(type -P "${hk_name}" )" ; \
+						[ -f "${hk}" ] && : || hk="$(pwd)/${hk_name}"
+						[ -f "${hk}" ] && : || { alert_message "ERR.: \n NO ${hk_name} !" ; exit 1 ; }
 	export bk_extractor_name="bashkaraoke_EXTRACTOR"; export bk_extractor="$(type -P "${bk_extractor_name}" )" ; \
 						[ -e "${bk_extractor}" ] && : || bk_extractor="$(pwd)/bashkaraoke_FILES/${bk_extractor_name}"
 						[ -e "${bk_extractor}" ] && : || { alert_message "ERR.: \n NO ${bk_extractor_name} !" ; exit 1 ; }
@@ -383,6 +386,7 @@ while :
 		fi
 		#
 		[ "${l}" = "IT" ] && menu \
+				"$(basename "${hk}" ) ->" \
 				"$(basename "${bk}" ) ->" \
 				"$(if [ $(echo -n "$(type "pykar" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "pykar ->"; fi )" \
 				"$(if [ $(echo -n "$(type "playmidi" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "playmidi ->"; fi )" \
@@ -394,6 +398,7 @@ while :
 				"$(if [ ${#array_lista[@]} -gt 1 ]; then echo "<-TORNA ALLA LISTA PRECEDENTE"; fi )" \
 				"<-MENU PRINCIPALE"
 		[ "${l}" = "EN" ] && menu \
+				"$(basename "${hk}" ) ->" \
 				"$(basename "${bk}" ) ->" \
 				"$(if [ $(echo -n "$(type "pykar" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "pykar ->"; fi )" \
 				"$(if [ $(echo -n "$(type "playmidi" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "playmidi ->"; fi )" \
@@ -419,6 +424,17 @@ while :
 			##
 			####
 			"${bk}" "${midi}"
+			####
+			##
+			#
+		elif [ "${scelta}" = "$(basename "${hk}" ) ->" ]
+			then
+			#
+			:
+			#
+			##
+			####
+			"${hk}" "${midi}"
 			####
 			##
 			#

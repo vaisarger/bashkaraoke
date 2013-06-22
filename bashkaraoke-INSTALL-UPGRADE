@@ -129,7 +129,7 @@ fi
 
 sleep 1 # ...let's go ahead: only *4* steps :
 # 1)
-for file in "./bashkaraoke" "./bashkar" "./bashkaraoke_FILES/bashkaraoke_COMMON" "./bashkaraoke_FILES/bashkaraoke_CORE" "./bashkaraoke_FILES/bashkaraoke_OUT" "./bashkaraoke_FILES/bashkaraoke_EXTRACTOR"
+for file in "./bashkaraoke" "./hyperkar" "./xtermkar" "./bashkaraoke_FILES/bashkaraoke_COMMON" "./bashkaraoke_FILES/bashkaraoke_CORE" "./bashkaraoke_FILES/bashkaraoke_OUT" "./bashkaraoke_FILES/bashkaraoke_EXTRACTOR"
 	do
 	chmod 755 "${file}"
 done && chmod 644 ./bashkaraoke_FILES/*.xpm ./bashkaraoke_FILES/*.png ./bashkaraoke_FILES/*.svg
@@ -141,7 +141,7 @@ mkdir -p "${system_bk_dir}"
 cp -fR "./bashkaraoke_FILES" "${system_bk_dir}/" ; chmod 777 "${system_bk_dir}/bashkaraoke_FILES"
 #
 # 4)
-cp "./bashkaraoke" "./bashkar" "${path_dir}/"
+cp "./bashkaraoke" "./hyperkar" "./xtermkar" "${path_dir}/"
 [ -f "${path_dir}/bk-extractor" ] && rm "${path_dir}/bk-extractor" ; \
 [ ! -e "${path_dir}/bk-extractor" ] && ln -s "${system_bk_dir}/bashkaraoke_FILES/bashkaraoke_EXTRACTOR" "${path_dir}/bk-extractor"
 #
