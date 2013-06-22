@@ -23,7 +23,7 @@
 #########################
 #
 start_dir="$(pwd)"
-	system_bk_dir="/usr/local/share/bashkaraoke"
+	system_bk_dir="/usr/share/bashkaraoke"
 	if [ -d "${system_bk_dir}" ]
 		then
 		dir="${system_bk_dir}"
