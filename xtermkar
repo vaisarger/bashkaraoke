@@ -195,7 +195,8 @@ else
 					gsed s\#'[[:space:]]\+'#'"*"'#g | \
 					gsed -n s\#'\(.*\)?$'#'\1'#p 
 					)"
-		path_canzone="$(echo "${path_canzone_pre}" | gsed s\#'^"~'#"\"${HOME}"# )"
+		#path_canzone="$(echo "${path_canzone_pre}" | gsed s\#'^"~'#"\"${HOME}"# )"
+		path_canzone="$(echo "${path_canzone_pre}" | gsed s\#'^.~'#".${HOME}"# )"
 		####
 		##
 		#
@@ -260,6 +261,12 @@ else
 		levels_window="false"
 	fi
 	#
+	##
+	#
+	export parent_bkscript="$(basename "${0}" )"
+	#
+	##
+	#
 	if [ "${levels_window}" = "true" -a "${channels_window}" = "false" ]
 		then
 		go_bk__levels
@@ -283,6 +290,12 @@ else
 		exit 1
 		#
 	fi
+	#
+	##
+	#
+	unset parent_bkscript
+	#
+	##
 	#
 fi
 #

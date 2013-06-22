@@ -195,7 +195,8 @@ else
 					gsed s\#'[[:space:]]\+'#'"*"'#g | \
 					gsed -n s\#'\(.*\)?$'#'\1'#p 
 					)"
-		path_canzone="$(echo "${path_canzone_pre}" | gsed s\#'^"~'#"\"${HOME}"# )"
+		#path_canzone="$(echo "${path_canzone_pre}" | gsed s\#'^"~'#"\"${HOME}"# )"
+		path_canzone="$(echo "${path_canzone_pre}" | gsed s\#'^.~'#".${HOME}"# )"
 		####
 		##
 		#
@@ -252,6 +253,14 @@ if [ $(echo -n "${xterm_error}" | grep "Can't open display" | wc -c ) -gt 0 ]
 	sleep 1
 	exit 1
 	#
+
+
+
+
+
+
+
+
 else
 	if [ "${mode}" = "dialog" ]
 		then
@@ -259,6 +268,12 @@ else
 		[ "${l}" = "EN" ] && alert_message "Currently, \n \"Levels\" window \n is not working \n in \"dialog\" mode... \n sorry :("
 		levels_window="false"
 	fi
+	#
+	##
+	#
+	export parent_bkscript="$(basename "${0}" )"
+	#
+	##
 	#
 	if [ "${levels_window}" = "true" -a "${channels_window}" = "false" ]
 		then
@@ -283,6 +298,12 @@ else
 		exit 1
 		#
 	fi
+	#
+	##
+	#
+	unset parent_bkscript
+	#
+	##
 	#
 fi
 #

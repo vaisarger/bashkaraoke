@@ -42,8 +42,8 @@ export log_file=".bashkaraoke.log"
 export timidity_log_file=".timidity.log"
 export version_file=".version"
 export pid_file=".pid"
-export xterm_karaoke_scriptname="xtermkar"
 export HTML_karaoke_scriptname="hyperkar"
+export xterm_karaoke_scriptname="xtermkar"
 #
 rc_file=".bashkaraoke.rc"
 if [ -f "${dir_Karaoke}/.bash!karaoke.rc" ]
@@ -585,6 +585,7 @@ crea_rc_default()
 	{
 	#
 	cat <<-EOB1
+	export bkbrowser="embedded"
 	export use_gtk="$(
 			if [ "${bashkaraoke_gtk}" = "SI" ]
 				then
@@ -1839,12 +1840,14 @@ modifica_rc()
 			while :
 				do
 				[ "${l}" = "IT" ] && menu \
+							"Browser per il fullscreen..." \
 							"Lingua delle canzoni..." \
 							"Codifica dei caratteri..." \
 							"Delimitatore dei campi menu..." \
 							"${delimiter}" \
 							"<-TORNA INDIETRO" 
 				[ "${l}" = "EN" ] && menu \
+							"Fullscreen browser..." \
 							"Song language..." \
 							"Character encoding..." \
 							"Menu field delimiter..."
@@ -1852,7 +1855,67 @@ modifica_rc()
 							"<-BACK" 
 				scelta_Varie="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#scelta_Varie} -eq 0 ] && break 2
 				#
-				if [ "${scelta_Varie}" = "Lingua delle canzoni..." -o "${scelta_Varie}" = "Song language..." ]
+				if [ "${scelta_Varie}" = "Browser per il fullscreen..." -o "${scelta_Varie}" = "Fullscreen browser..." ]
+					then
+					# 13) bkbrowser
+					if [ "${l}" = "IT" ]
+						then
+						question "Attuale \n valore \n \"bkbrowser\": \n\n \"${bkbrowser}\" \n\n\n Vuoi \n cambiarlo?"
+						risposta=${?}
+					elif [ "${l}" = "EN" ]
+						then
+						question "Current \n \"bkbrowser\" \n value: \n\n \"${bkbrowser}\" \n\n\n Do you want \n change it?"
+						risposta=${?}
+					fi
+					if [ ${risposta} -eq 0 ]
+						then
+						if [ ${#BROWSER} -gt 0 ]
+							then
+							menu "embedded" "${BROWSER}" "[CUSTOM]"
+						else
+							menu "embedded" "[CUSTOM]"
+						fi
+						browser_choice="$(cat "${dir_tmp}/${file_tmp}" )" ; [ ${browser_choice} -eq 0 ] && continue 2
+						if [ "${browser_choice}" = "[CUSTOM]" ]
+							then
+							message "Please, select a browser \n\n (Tip: download and select \"Midori\"... )"
+							fselect
+							browser_choice="$(cat "${dir_tmp}/${file_tmp}" )" ; [ ${#browser_choice} -eq 0 ] && continue 2
+						fi
+						#
+						##
+						#
+						if [ "${browser_choice}" = "embedded" ]
+							then
+							bkbrowser="${browser_choice}"
+							#
+						else
+							if [ -x "${browser_choice}" ]
+								then
+								bkbrowser="${browser_choice}"
+								#
+							else
+								[ "${l}" = "IT" ] && alert_message "Il file selezionato non e' eseguibile"
+								[ "${l}" = "EN" ] && alert_message "Selected file is not executable"
+								:
+							fi
+						fi
+						#
+						##
+						#						
+						wait_seconds 2
+						break 1
+						#
+					elif [ ${risposta} -eq 1 ]
+						then
+						:
+					else
+						ciao
+					fi
+					#
+					continue 1
+					#
+				elif [ "${scelta_Varie}" = "Lingua delle canzoni..." -o "${scelta_Varie}" = "Song language..." ]
 					then
 					# 13) LANG
 					if [ "${l}" = "IT" ]
@@ -2594,11 +2657,27 @@ go_bk__levels_channels()
 #
 go_bk()
 	{
+	HTML_bk()
+		{
+		#
+		if [ ${bkbrowser} = "embedded" ]
+			then
+			:
+		fi
+		#
+		exec xterm -cr "${background}" -xrm 'xterm*cursorUnderLine: true' -xrm "xterm*allowWindowOps: true" -title "$(basename "${0}"): $(basename "${midi}" | iconv -f "${char_encoding}" ) (${extract_way}#$(basename "${sf}" ))" -bg "${background}" -fg "${foreground_1}" -fn "${font}" -geometry ${columns}x3+20+400 -e "${bkcore}" "${midi}"
+		}
+	#
+	##
+	#
 	xterm_bk()
 		{
 		#
 		exec xterm -cr "${background}" -xrm 'xterm*cursorUnderLine: true' -xrm "xterm*allowWindowOps: true" -title "$(basename "${0}"): $(basename "${midi}" | iconv -f "${char_encoding}" ) (${extract_way}#$(basename "${sf}" ))" -bg "${background}" -fg "${foreground_1}" -fn "${font}" -geometry ${columns}x3+20+400 -e "${bkcore}" "${midi}"
 		}
+	#
+	##
+	#
 	nude_bk()
 		{
 		#
@@ -2685,7 +2764,13 @@ go_bk()
 	################################
 	if [ "${karaoke_window}" = "true" ]
 		then
-		xterm_bk
+		if [ "${parent_bkscript}" = "${HTML_karaoke_scriptname}" ]
+			then
+			HTML_bk
+		elif [ "${parent_bkscript}" = "${xterm_karaoke_scriptname}" ]
+			then
+			xterm_bk
+		fi
 	elif [ "${karaoke_window}" = "false" ]
 		then
 		nude_bk
@@ -3523,7 +3608,7 @@ BLOCCO_bkXbuc_xplaymidi
 						#
 					elif [ "${scelta_Modo}" = "GSW" ]
 						then
-						if [ $(which "gtkdialog" | wc -c ) -eq 0 ] #ZUZZA
+						if [ $(which "gtkdialog" | wc -c ) -eq 0 ]
 							then
 							[ "${l}" = "IT" ] && echo " [fallito: nessun gtkdialog nel sistema...]"
 							[ "${l}" = "EN" ] && echo " [failed: no gtkdialog in system...]"
