@@ -30,7 +30,7 @@ Since version 5.0.0 we are working to add fullscreen feature to program, but it'
 
 
 CHANGELOG :
-- 7.0.0 -> BashKaraoke is housed in GitHub
+- 7.0.0 -> BashKaraoke is housed in GitHub, "bashkar" -> "xtermkar", created "hyperkar" (fullscreen) to use any HTML viewer
 - 6.0.0 -> backend is modularized: Timidity becomes one of many possible backends, database changed, *OUT (-i option) updates database rows
 - 5.9.9 -> *OUT uses play() function in *CORE (no more redundancy), little improvements
 - 5.0.0 -> GTK mode added, but still in development
@@ -219,7 +219,7 @@ Dalla versione 5.0.0 esiste anche lo script python "bashkaraoke-gtk" che aggiung
 
 
 CHANGELOG :
-- 7.0.0 -> BashKaraoke è ospitato in GitHub
+- 7.0.0 -> BashKaraoke è ospitato in GitHub, "bashkar" -> "xtermkar", creato "hyperkar" (fullscreen) per usare qualsiasi visualizzatore HTML
 - 6.0.0 -> il backend e' modularizzato: Timidity diventa uno dei tanti backends possibili, il database e' cambiato, *OUT (opzione -i) aggiorna le righe del database 
 - 5.9.9 -> *OUT usa la funzione play() nel *CORE (non c'e' piu' ridondanza), piccoli miglioramenti
 - 5.0.0 -> aggiunto il modo GTK, ma è ancora in sviluppo

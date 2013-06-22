@@ -2797,6 +2797,12 @@ go_bk()
 		if [ "${bkbrowser}" = "${embedded_browser}" ]
 			then
 			${bkbrowser} -f "${HTML_file_to_read}"
+			uscita_di_embedded_browser="${?}"
+			if [ ${uscita_di_embedded_browser} -ne 0 ]
+				then
+				[ "${l}" = "IT" ] && alert_message "Sembra che il browser \"embedded\" \n sia uscito inaspettatamente. \n Per favore, nota che esso \n ha bisogno di Python e Webkit \n per funzionare. \n\n Potresti considerare \n di cambiare \n il browser di fullscreen \n in bashkaraoke \n -> \"CONFIGURA\" -> \"Varie...\""
+				[ "${l}" = "EN" ] && alert_message "It seems that \"embedded\" browser \n exited with an error. \n Please, note that \n it needs Python and Webkit \n to work. \n\n You would consider \n to change fullscreen browser \n in bashkaraoke \n -> \"CONFIGURE\" -> \"Misc...\""
+			fi
 		else
 			${bkbrowser} file://"${HTML_file_to_read}"
 		fi &
