@@ -23,22 +23,25 @@
 #########################
 #
 start_dir="$(pwd)"
-system_bk_dir="/usr/local/share/bashkaraoke"
-if [ -d "${system_bk_dir}" ]
-	then
-	dir="${system_bk_dir}"
-else
-	[ -f "${0}" ] && \
-		dir="$(dirname "${0}" )" || \
-		dir="$(dirname "$(type -P "${0}" )" )"
-fi
-cd "${dir}"
+	system_bk_dir="/usr/local/share/bashkaraoke"
+	if [ -d "${system_bk_dir}" ]
+		then
+		dir="${system_bk_dir}"
+	else
+		[ -f "${0}" ] && \
+			dir="$(dirname "${0}" )" || \
+			dir="$(dirname "$(type -P "${0}" )" )"
+	fi
+	cd "${dir}"
 	#
 	[ ${#BK_VERSION_NUMBER} -eq 0 ] && \
 	source "$(pwd)/bashkaraoke_FILES/bashkaraoke_COMMON"
 	[ ${#columns} -eq 0 ] && export columns=${colonne} ; [ ${#delimiter} -eq 0 ] && delimiter="______________________________________"
 	#
 	bkcore="$(pwd)/bashkaraoke_FILES/bashkaraoke_CORE"
+	export bk_OUT_name="bashkaraoke_OUT"; export bk_OUT="$(type -P "${bk_OUT_name}" )" ; \
+					[ -f "${bk_OUT}" ] && : || bk_OUT="$(pwd)/bashkaraoke_FILES/${bk_OUT_name}"
+					[ -f "${bk_OUT}" ] && : || { alert_message "ERR.: \n NO ${bk_OUT_name} !" ; exit 1 ; }
 	#
 cd "${start_dir}"
 #
