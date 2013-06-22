@@ -124,10 +124,7 @@ fi
 #############################################
 #
 # PHEWWWWWW!!!... EVERYTHING'S OK!!!    :-)
-[ "${l}" = "IT" ] && wait_for "Attendere prego..."
-[ "${l}" = "EN" ] && wait_for "Please wait..."
-
-sleep 1 # ...let's go ahead: only *4* steps :
+#sleep 1 # ...let's go ahead: only *4* steps :
 # 1)
 for file in "./bashkaraoke" "./hyperkar" "./xtermkar" "./bashkaraoke_FILES/bashkaraoke_COMMON" "./bashkaraoke_FILES/bashkaraoke_CORE" "./bashkaraoke_FILES/bashkaraoke_OUT" "./bashkaraoke_FILES/bashkaraoke_EXTRACTOR"
 	do
