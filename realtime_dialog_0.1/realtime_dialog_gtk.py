@@ -19,7 +19,8 @@
 # with this program.    If not, see <http://www.gnu.org/licenses/>.
 
 import os, sys, time
-from gi.repository import Gtk, Gdk, GLib, WebKit
+#from gi.repository import Gtk, Gdk, GLib, WebKit
+from gi.repository import Gtk, WebKit
 
 ### MODIFICA QUI ###
 
@@ -65,7 +66,7 @@ class Dialog(object):
         self.main.show_all()
 
         self.wait_gtk()
-        GLib.timeout_add(TIMEOUT, self.refresh_label)
+        #GLib.timeout_add(TIMEOUT, self.refresh_label)
 
     def on_fullscreen(self, widget=None):
         if not self.is_fullscreen:
@@ -79,9 +80,9 @@ class Dialog(object):
             self.tb_fullscreen.set_label("Fullscreen")
             self.is_fullscreen = False
 
-    def refresh_label(self):
-        self.webview.reload()
-        return True
+    #def refresh_label(self):
+    #    self.webview.reload()
+    #    return True
 
     def title_changed(self, webview, frame, title):
         self.main.set_title(title)
@@ -98,9 +99,9 @@ class Dialog(object):
         
 def init(args):
     app = Dialog(args)
-    GLib.threads_init()
-    Gdk.threads_init()
-    Gdk.threads_enter()
+    #GLib.threads_init()
+    #Gdk.threads_init()
+    #Gdk.threads_enter()
     Gtk.main()
-    Gdk.threads_leave()
+    #Gdk.threads_leave()
 

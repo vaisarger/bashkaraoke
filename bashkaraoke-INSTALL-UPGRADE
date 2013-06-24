@@ -136,7 +136,7 @@ mkdir -p "${system_bk_dir}"
 #
 # 3)
 cp -fR "./bashkaraoke_FILES" "${system_bk_dir}/" ; chmod 777 "${system_bk_dir}/bashkaraoke_FILES"
-cp -fR "./realtime_dialog_0.1" "${system_bk_dir}/" ; chmod 777 "${system_bk_dir}/realtime_dialog_0.1" ; chmod 755 "${system_bk_dir}/realtime_dialog_0.1/realtime_dialog.py"
+cp -fR "./realtime_dialog_0.2" "${system_bk_dir}/" ; chmod 777 "${system_bk_dir}/realtime_dialog_0.2" ; chmod 755 "${system_bk_dir}/realtime_dialog_0.2/realtime_dialog.py"
 #
 # 4)
 cp "./bashkaraoke" "./hyperkar" "./xtermkar" "${path_dir}/"

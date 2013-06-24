@@ -103,7 +103,7 @@ export l
 #
 ####################################
 #
-BK_VERSION_NUMBER="7.0.0"
+BK_VERSION_NUMBER="8.0.2"
 #
 : version_file
 echo "${BK_VERSION_NUMBER}" 1> "${dir_Karaoke}/${version_file}"
@@ -298,7 +298,7 @@ export gsw_sing_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_icon.png"
 #
 ##
 #
-export embedded_browser_dir="$(pwd)/realtime_dialog_0.1"
+export embedded_browser_dir="$(pwd)/realtime_dialog_0.2"
 export embedded_browser="${embedded_browser_dir}/realtime_dialog.py"
 #
 ##
