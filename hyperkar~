@@ -268,7 +268,7 @@ else
 	##
 	#
 	export parent_bkscript="$(basename "${0}" )"
-	rm "${dir_Karaoke}/${go_file}" 2>/dev/null
+	rm "${dir_Karaoke}/${gofile}" 2>/dev/null
 	#
 	##
 	#
