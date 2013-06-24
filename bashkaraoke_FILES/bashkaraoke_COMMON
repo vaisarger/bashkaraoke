@@ -1919,7 +1919,7 @@ modifica_rc()
 					#
 				elif [ "${scelta_Varie}" = "Lingua delle canzoni..." -o "${scelta_Varie}" = "Song language..." ]
 					then
-					# 13) LANG
+					# 14) LANG
 					if [ "${l}" = "IT" ]
 						then
 						question "Attuale \n valore \n \"LANG\": \n\n \"${LANG}\" \n\n\n Vuoi \n cambiarlo?"
@@ -1949,7 +1949,7 @@ modifica_rc()
 					#
 				elif [ "${scelta_Varie}" = "Codifica dei caratteri..." -o "${scelta_Varie}" = "Character encoding..." ]
 					then
-					# 14) char_encoding
+					# 15) char_encoding
 					if [ "${l}" = "IT" ]
 						then
 						question "Attuale \n valore \n \"char_encoding\": \n\n \"${char_encoding}\" \n\n\n Vuoi \n cambiarlo?"
@@ -1978,7 +1978,7 @@ modifica_rc()
 					#
 				elif [ "${scelta_Varie}" = "Delimitatore dei campi menu..." -o "${scelta_Varie}" = "Menu field delimiter..." ]
 					then
-					# 15) delimiter
+					# 16) delimiter
 					if [ "${l}" = "IT" ]
 						then
 						question "Attuale \n valore \n \"delimiter\": \n\n \"${delimiter}\" \n\n\n Vuoi \n cambiarlo?"
@@ -2078,6 +2078,7 @@ modifica_rc()
 	#
 	[ "${scrivi}" = "SI" ] && \
 	cat <<-EOB2 1> "${dir_tmp}/${file_tmp}"
+	export bkbrowser="${bkbrowser}"
 	export use_gtk="${use_gtk}"
 	export use_gsw="${use_gsw}"
 	export use_buc="${use_buc}"
