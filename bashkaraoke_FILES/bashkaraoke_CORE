@@ -47,7 +47,11 @@ if [ ${#BK_VERSION_NUMBER} -eq 0 ]
 		#
 		source "$(pwd)/bashkaraoke_COMMON"
 		#
+		dir_CORE_parent="$(dirname "${dir_CORE}" )"
+		embedded_browser_dir_correct="${dir_CORE_parent}/realtime_dialog_${EMBEDDED_BROWSER_VERSION}"
+		export internation2web_script="${embedded_browser_dir_correct}/internation2web.py"
 		: internation2web_script
+		[ ! -f "${internation2web_script}" ] && echo -e "\nErr.: file \"${internation2web_script}\" doesn't exist...\n\n" && sleep 3 && exit 1
 		#
 	cd "${start_dir}"
 fi
@@ -527,6 +531,7 @@ play()
 								[ ${#output_file} -eq 0 ] && echo -en "\r" || echo -e "\n"
 								#
 								echo "${coda_HTML}"
+								#} | ${internation2web_script}
 								}
 								###############################
 							else
@@ -545,8 +550,9 @@ play()
 								[ ${#output_file} -eq 0 ] && echo -en "\r" || echo -e "\n"
 								#
 								echo "${coda_HTML}"
+								#} | ${internation2web_script}
 								}
-							fi | ${internation2web_script} | tee "${output_file:-/dev/null}"
+							fi | tee "${output_file:-/dev/null}"
 						else
 							if [ ${v_di_w} -lt ${columns} ]
 								then

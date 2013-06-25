@@ -306,7 +306,6 @@ export gsw_sing_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_icon.png"
 #
 export embedded_browser_dir="$(pwd)/realtime_dialog_${EMBEDDED_BROWSER_VERSION}"
 export embedded_browser="${embedded_browser_dir}/realtime_dialog.py"
-export internation2web_script="${embedded_browser_dir}/internation2web.py"
 #
 ##
 #
