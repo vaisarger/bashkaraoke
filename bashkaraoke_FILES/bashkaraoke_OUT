@@ -565,10 +565,9 @@ elif [ "${output_mode}" = "h" ]
 		<div class="textBox" >
 			<span>'
 	export intestazione_HTML='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head><title>'"${HTML_karaoke_scriptname}"': HTML window vers.'"${EMBEDDED_BROWSER_VERSION}"'...</title><script src="js/jquery.min.js"></script><script src="js/jquery.textfill.min.js"></script><script src="js/config.js"></script><style type="text/css" title="currentStyle">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>'"${HTML_karaoke_scriptname}"': HTML window vers.'"${EMBEDDED_BROWSER_VERSION}"'...</title><script src="js/jquery.min.js"></script><script src="js/jquery.textfill.min.js"></script><script src="js/config.js"></script><style type="text/css" title="currentStyle">
 @import "css/css_karaoke.css";
-</style><meta http-equiv="refresh" content="0.3"/></head><body><div class="textBox" ><span>'
+</style><meta http-equiv="refresh" content="0.2"/></head><body><div class="textBox" ><span>'
 	#
 	export foreground_html_0="<font class=\"color_old\">"
 	#
