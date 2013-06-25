@@ -104,7 +104,7 @@ export l
 #
 ####################################
 #
-BK_VERSION_NUMBER="8.0.3"
+BK_VERSION_NUMBER="8.0.4"
 #
 : version_file
 echo "${BK_VERSION_NUMBER}" 1> "${dir_Karaoke}/${version_file}"
@@ -113,7 +113,7 @@ echo "${BK_VERSION_NUMBER}" 1> "${dir_Karaoke}/${version_file}"
 #
 export MIN_LIB_VERSION_REQUIRED="4.0.3" # This is related to *EasyBashGUI* version...
 # 
-[ ${#LIB_URL} -eq 0 ] && export LIB_URL="http://sites.google.com/site/easybashgui"
+[ ${#LIB_URL} -eq 0 ] && export LIB_URL="https://sites.google.com/site/easybashgui"
 #
 ##
 #
@@ -306,6 +306,7 @@ export gsw_sing_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_icon.png"
 #
 export embedded_browser_dir="$(pwd)/realtime_dialog_${EMBEDDED_BROWSER_VERSION}"
 export embedded_browser="${embedded_browser_dir}/realtime_dialog.py"
+export internation2web_script="${embedded_browser_dir}/internation2web.py"
 #
 ##
 #

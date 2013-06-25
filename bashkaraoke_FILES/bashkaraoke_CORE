@@ -47,6 +47,8 @@ if [ ${#BK_VERSION_NUMBER} -eq 0 ]
 		#
 		source "$(pwd)/bashkaraoke_COMMON"
 		#
+		: internation2web_script
+		#
 	cd "${start_dir}"
 fi
 #
@@ -505,44 +507,83 @@ play()
 						#
 						[ ${#output_file} -eq 0 ] && echo -en "\e[8;${righe};${columns}t"
 						#
-						if [ ${v_di_w} -lt ${columns} ]
+						if [ "${output_mode}" = "h" ]
 							then
-							###############################
-							{
-							[ "${output_mode}" = "h" ] && echo "${intestazione_HTML}"
-							#
-							#echo -e "${!foreground_1}${testo:${quante_volte_per_columns__pre}:${columns}}"
-							echo -en "${!foreground_1}${testo:${quante_volte_per_columns}:${resto}}${foreground_1_bis}"
-							echo -e "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${resto})):$(( ${columns} - ${resto} ))}${foreground_2_bis}"
-							#
-							echo -e "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${columns})):$(( ${columns} - 1 ))}${foreground_2_bis}"
-							#
-							echo -en "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${columns} + ${columns})):$(( ${columns} - 1 ))}${foreground_2_bis}"
-							#
-							#
-							[ ${#output_file} -eq 0 ] && echo -en "\r" || echo -e "\n"
-							#
-							[ "${output_mode}" = "h" ] && echo "${coda_HTML}"
-							}
-							###############################
+							if [ ${v_di_w} -lt ${columns} ]
+								then
+								###############################
+								{
+								echo "${intestazione_HTML}"
+								#
+								#echo -e "${!foreground_1}${testo:${quante_volte_per_columns__pre}:${columns}}"
+								echo -en "${!foreground_1}${testo:${quante_volte_per_columns}:${resto}}${foreground_1_bis}"
+								echo -e "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${resto})):$(( ${columns} - ${resto} ))}${foreground_2_bis}"
+								#
+								echo -e "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${columns})):$(( ${columns} - 1 ))}${foreground_2_bis}"
+								#
+								echo -en "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${columns} + ${columns})):$(( ${columns} - 1 ))}${foreground_2_bis}"
+								#
+								#
+								[ ${#output_file} -eq 0 ] && echo -en "\r" || echo -e "\n"
+								#
+								echo "${coda_HTML}"
+								}
+								###############################
+							else
+								###############################
+								{
+								echo "${intestazione_HTML}"
+								#
+								echo -e "${!foreground_0}${testo:${quante_volte_per_columns__pre}:${columns}}${foreground_0_bis}"
+								#
+								echo -en "${!foreground_1}${testo:${quante_volte_per_columns}:${resto}}${foreground_1_bis}"
+								echo -e "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${resto})):$(( ${columns} - ${resto} ))}${foreground_2_bis}"
+								#
+								echo -en "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${columns})):$(( ${columns} - 1 ))}${foreground_2_bis}"
+								#
+								#
+								[ ${#output_file} -eq 0 ] && echo -en "\r" || echo -e "\n"
+								#
+								echo "${coda_HTML}"
+								}
+							fi | ${internation2web_script} | tee "${output_file:-/dev/null}"
 						else
-							###############################
-							{
-							[ "${output_mode}" = "h" ] && echo "${intestazione_HTML}"
+							if [ ${v_di_w} -lt ${columns} ]
+								then
+								###############################
+								{
+								#
+								#echo -e "${!foreground_1}${testo:${quante_volte_per_columns__pre}:${columns}}"
+								echo -en "${!foreground_1}${testo:${quante_volte_per_columns}:${resto}}${foreground_1_bis}"
+								echo -e "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${resto})):$(( ${columns} - ${resto} ))}${foreground_2_bis}"
+								#
+								echo -e "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${columns})):$(( ${columns} - 1 ))}${foreground_2_bis}"
+								#
+								echo -en "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${columns} + ${columns})):$(( ${columns} - 1 ))}${foreground_2_bis}"
+								#
+								#
+								[ ${#output_file} -eq 0 ] && echo -en "\r" || echo -e "\n"
+								#
+								}
+								###############################
+							else
+								###############################
+								{
+								#
+								echo -e "${!foreground_0}${testo:${quante_volte_per_columns__pre}:${columns}}${foreground_0_bis}"
+								#
+								echo -en "${!foreground_1}${testo:${quante_volte_per_columns}:${resto}}${foreground_1_bis}"
+								echo -e "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${resto})):$(( ${columns} - ${resto} ))}${foreground_2_bis}"
+								#
+								echo -en "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${columns})):$(( ${columns} - 1 ))}${foreground_2_bis}"
+								#
+								#
+								[ ${#output_file} -eq 0 ] && echo -en "\r" || echo -e "\n"
+								#
+								}
+							fi | tee "${output_file:-/dev/null}"
 							#
-							echo -e "${!foreground_0}${testo:${quante_volte_per_columns__pre}:${columns}}${foreground_0_bis}"
-							#
-							echo -en "${!foreground_1}${testo:${quante_volte_per_columns}:${resto}}${foreground_1_bis}"
-							echo -e "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${resto})):$(( ${columns} - ${resto} ))}${foreground_2_bis}"
-							#
-							echo -en "${!foreground_2}${testo:$((${quante_volte_per_columns} + ${columns})):$(( ${columns} - 1 ))}${foreground_2_bis}"
-							#
-							#
-							[ ${#output_file} -eq 0 ] && echo -en "\r" || echo -e "\n"
-							#
-							[ "${output_mode}" = "h" ] && echo "${coda_HTML}"
-							}
-						fi | tee "${output_file:-/dev/null}"
+						fi #if [ "${output_mode}" = "h" ]
 						#
 						(( v_di_w_di_controllo++ ))
 						#
