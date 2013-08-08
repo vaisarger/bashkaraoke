@@ -3,7 +3,6 @@
 #########################
 #
 # Copyright (C) 2013 Vittorio Cagnetta
-# Copyright (C) 2013 Davide Depau
 #
 # Author: Vittorio Cagnetta <vaisarger@gmail.com>
 #
@@ -23,7 +22,7 @@
 #########################
 #
 export system_bk_dir="/usr/share/bashkaraoke"
-export dir_Karaoke=".bashkaraoke"
+export dir_Karaoke=".config/bashkaraoke"
 export path_dir="/usr/bin"
 source easybashgui
 #
@@ -65,8 +64,7 @@ for file in "${path_dir}/bashkaraoke" "${path_dir}/hyperkar" "${path_dir}/xtermk
 		then
 		rm "${file}"
 	else
-		alert_message "ERR.: NO \"${file}\" ???"
-		exit 1
+		alert_message "NO \"${file}\" ..."
 	fi
 done
 for old in /usr/local/bin/bashkaraoke /usr/local/bin/bashkar /usr/local/bin/bk-extractor
@@ -97,6 +95,14 @@ for dir in "${system_bk_dir}" $(for ((i=0 ; i < ${#array_home_dirs[@]} ; i++)); 
 				rm -fR "${dir}"
 			elif [ ${risposta} -eq 1 ]
 				then
+				if [ "${l}" = "IT" ]
+					then
+					ok_message "${dir} \n non e' stata rimossa."
+				elif [ "${l}" = "EN" ]
+					then
+					ok_message "${dir} \n was not removed."
+				fi
+			else
 				:
 			fi
 			#
