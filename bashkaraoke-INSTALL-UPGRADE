@@ -22,10 +22,18 @@
 #
 #########################
 #
-export system_bk_dir="/usr/share/bashkaraoke"
-export path_dir="/usr/bin"
+
+# ${DESTDIR} should be set throught "export DESTDIR=..." in debian/rules while packaging, or take it from the first command-line argument
+[ -z "${DESTDIR}" ] && DESTDIR=$1
+#the script should work fine even if DESTDIR is not set
+
+export system_bk_dir="${DESTDIR}/usr/share/bashkaraoke"
+export path_dir="${DESTDIR}/usr/bin"
 export LIB_URL="https://github.com/BashGui/easybashgui/tags"
 export MIN_LIB_VERSION_REQUIRED="4.0.3"
+
+DOCDIR="${DESTDIR}/usr/share/doc/bashkaraoke" 
+
 #
 #############################################
 # CHECKS
@@ -45,30 +53,47 @@ fi
 export l
 #
 # ...are we in source directory?
-if [ ! -d "./bashkaraoke_FILES" ]
+if [ ! -d "src/bashkaraoke_FILES" ]
 	then
 	[ "${l}" = "IT" ] && echo -e "Devi lanciare questo programma \n nella cartella dei sorgenti \n di bashkaraoke. \n\n Per favore, \n digita \"cd /percorso/alla/cartella/dei/sorgenti\", \n quindi rilancia questo programma."
 	[ "${l}" = "EN" ] && echo -e "You must launch this program \n in bashkaraoke source directory. \n\n Please, \n type \"cd /path/to/source\" , \n then relaunch this program."
-	sleep 3
+
+#   we don't need 3 seconds to read errors in buildlog
+#	sleep 3
+
 	exit 1
 fi
+
 #
 # ...am I root?
+
+# fakeroot should provide fake root privileges, but let's check anyway
+
 if [ "$(whoami)" != "root" ]
 	then
 	[ "${l}" = "IT" ] && echo -e "\nDevi essere \"root\". \n\n Per favore, apri un terminale, digita \"su\", quindi rilancia questo programma..."
 	[ "${l}" = "EN" ] && echo -e "\nYou must be \"root\". \n\n Please, open a terminal, type \"su\", then relaunch this program..."
-	sleep 3
+	
+	#   we don't need 3 seconds to read errors in buildlog
+	#sleep 3
+	
 	exit 1
 fi
+
 #
 # ...easybashgui?
+
+#..and of course we have easybashgui, because b!k depends on it. but let's check anyway
+
 if [ $(echo -n "$(type "easybashgui" 2>/dev/null)" | wc -c ) -eq 0 ]
 	then
 	[ "${l}" = "IT" ] && echo -e "Sembra che non hai \"easybashgui\" nel tuo sistema \n oppure la libreria \"easybashgui\" non si trova nel path...\n\n\n Per favore, scaricala da ${LIB_URL}, copiala nel tuo path ( p.es.: in /usr/local/bin/ ), e linkala in questo modo: \"ln -s /usr/local/bin/easybashgui_?.?.? /usr/local/bin/easybashgui\" ." 1>&2
 	[ "${l}" = "EN" ] && echo -e "It seems you don't have \"easybashgui\" in your system \n or \"easybashgui\" library isn't in your path ...\n\n\n Please, download it from ${LIB_URL}, copy it in your path (e.g.: in /usr/local/bin/ ), and link it in this way: \"ln -s /usr/local/bin/easybashgui_?.?.? /usr/local/bin/easybashgui\" ." 1>&2
-	sleep 3
-	#exit 1
+	
+	#   we don't need 3 seconds to read errors in buildlog
+	#sleep 3
+	
+	exit 1
 else
 	# Ok, easybashgui exists... let's check min required version...
 	: MIN_LIB_VERSION_REQUIRED
@@ -113,9 +138,17 @@ else
 	#
 	if [ "${obsolete_lib}" = "YES" ]
 		then
-		[ "${l}" = "IT" ] && alert_message "Sembra \n che hai \n una versione \n di \"easybashgui\" \n nel tuo sistema \n inferiore \n alla ${MIN_LIB_VERSION_REQUIRED}\n...\n\n\n\n\n Per favore, \n scarica da \n ${LIB_URL} \n una versione \n recente \n di \"easybashgui\" \n e installala \n prima \n di lanciare \n il programma... :("
-		[ "${l}" = "EN" ] && alert_message "It seems \n you have \n an \"easybashgui\" \n version \n in your system \n prior \n to ${MIN_LIB_VERSION_REQUIRED}\n...\n\n\n\n\n Please, \n download from \n ${LIB_URL} \n a recent \n \"easybashgui\" \n version \n and install it \n first... :("
+		
+		#let's comment all the windows style installation dialog while packaging
+		#[ "${l}" = "IT" ] && alert_message "Sembra \n che hai \n una versione \n di \"easybashgui\" \n nel tuo sistema \n inferiore \n alla ${MIN_LIB_VERSION_REQUIRED}\n...\n\n\n\n\n Per favore, \n scarica da \n ${LIB_URL} \n una versione \n recente \n di \"easybashgui\" \n e installala \n prima \n di lanciare \n il programma... :("
+		#[ "${l}" = "EN" ] && alert_message "It seems \n you have \n an \"easybashgui\" \n version \n in your system \n prior \n to ${MIN_LIB_VERSION_REQUIRED}\n...\n\n\n\n\n Please, \n download from \n ${LIB_URL} \n a recent \n \"easybashgui\" \n version \n and install it \n first... :("
+		
+		#echo will work anyway
+		[ "${l}" = "IT" ] && echo -e "Sembra \n che hai \n una versione \n di \"easybashgui\" \n nel tuo sistema \n inferiore \n alla ${MIN_LIB_VERSION_REQUIRED}\n...\n\n\n\n\n Per favore, \n scarica da \n ${LIB_URL} \n una versione \n recente \n di \"easybashgui\" \n e installala \n prima \n di lanciare \n il programma... :("
+		[ "${l}" = "EN" ] && echo -e "It seems \n you have \n an \"easybashgui\" \n version \n in your system \n prior \n to ${MIN_LIB_VERSION_REQUIRED}\n...\n\n\n\n\n Please, \n download from \n ${LIB_URL} \n a recent \n \"easybashgui\" \n version \n and install it \n first... :("
+		
 		clean_temp
+		
 		exit 1
 	fi
 fi
@@ -126,27 +159,42 @@ fi
 # PHEWWWWWW!!!... EVERYTHING'S OK!!!    :-)
 #sleep 1 # ...let's go ahead: only *4* steps :
 # 1)
-for file in "./bashkaraoke" "./hyperkar" "./xtermkar" "./bashkaraoke_FILES/bashkaraoke_COMMON" "./bashkaraoke_FILES/bashkaraoke_CORE" "./bashkaraoke_FILES/bashkaraoke_OUT" "./bashkaraoke_FILES/bashkaraoke_EXTRACTOR"
+for file in "src/bashkaraoke" "src/hyperkar" "src/xtermkar" "src/bashkaraoke_FILES/bashkaraoke_COMMON" "src/bashkaraoke_FILES/bashkaraoke_CORE" "src/bashkaraoke_FILES/bashkaraoke_OUT" "src/bashkaraoke_FILES/bashkaraoke_EXTRACTOR"
 	do
 	chmod 755 "${file}"
-done && chmod 644 ./bashkaraoke_FILES/*.xpm ./bashkaraoke_FILES/*.png ./bashkaraoke_FILES/*.svg
+done && chmod 644 src/bashkaraoke_FILES/*.xpm src/bashkaraoke_FILES/*.png src/bashkaraoke_FILES/*.svg
 #
 # 2)
+
+#we need also to creare the /usr/bin and /usr/share/doc/bashkaraoke directory while packaging
+mkdir -p "${path_dir}"
+mkdir -p "${DOCDIR}"
+
 mkdir -p "${system_bk_dir}"
 #
 # 3)
-cp -fR "./bashkaraoke_FILES" "${system_bk_dir}/" ; chmod 777 "${system_bk_dir}/bashkaraoke_FILES"
-cp -fR "./realtime_dialog_0.2" "${system_bk_dir}/" ; chmod 777 "${system_bk_dir}/realtime_dialog_0.2" ; chmod 755 "${system_bk_dir}/realtime_dialog_0.2/realtime_dialog.py"
+cp -fR "src/bashkaraoke_FILES" "${system_bk_dir}/" ; chmod 777 "${system_bk_dir}/bashkaraoke_FILES"
+cp -fR "src/realtime_dialog_0.2" "${system_bk_dir}/" ; chmod 777 "${system_bk_dir}/realtime_dialog_0.2" ; chmod 755 "${system_bk_dir}/realtime_dialog_0.2/realtime_dialog.py"
 #
 # 4)
-cp "./bashkaraoke" "./hyperkar" "./xtermkar" "${path_dir}/"
+cp "src/bashkaraoke" "src/hyperkar" "src/xtermkar" "${path_dir}/"
 [ -f "${path_dir}/bk-extractor" ] && rm "${path_dir}/bk-extractor" ; \
 [ ! -e "${path_dir}/bk-extractor" ] && ln -s "${system_bk_dir}/bashkaraoke_FILES/bashkaraoke_EXTRACTOR" "${path_dir}/bk-extractor"
 #
 #############################################
 #
-[ "${l}" = "IT" ] && ok_message "Installazione terminata \n con successo ! \n\n Grazie per aver installato \n Bash!Karaoke ! \n\n Puoi lanciarlo, \n in un terminale, \n digitando : \n \"bashkaraoke\" \n dopodiche', \n non dimenticarti \n di configurare \n il font... \n\n\n Divertiti !   ;-)"
-[ "${l}" = "EN" ] && ok_message "Bash!Karaoke successfully installed ! \n\n Thanks for installing \n Bash!Karaoke ! \n\n You would launch it, \n in a terminal, \n typing : \n \"bashkaraoke\" \n after that, \n don't forget \n to configure font...\n\n\n Enjoy !   ;-)" 
+
+#5) in additional, let's copy README and license files into /usr/share/doc/bashkaraoke
+cp LICENSE README ${DOCDIR}
+
+
+#let's comment all the windows style installation dialog while packaging
+#[ "${l}" = "IT" ] && ok_message "Installazione terminata \n con successo ! \n\n Grazie per aver installato \n Bash!Karaoke ! \n\n Puoi lanciarlo, \n in un terminale, \n digitando : \n \"bashkaraoke\" \n dopodiche', \n non dimenticarti \n di configurare \n il font... \n\n\n Divertiti !   ;-)"
+#[ "${l}" = "EN" ] && ok_message "Bash!Karaoke successfully installed ! \n\n Thanks for installing \n Bash!Karaoke ! \n\n You would launch it, \n in a terminal, \n typing : \n \"bashkaraoke\" \n after that, \n don't forget \n to configure font...\n\n\n Enjoy !   ;-)" 
 #
+
+[ "${l}" = "IT" ] && echo -e "Installazione terminata \n con successo ! \n\n Grazie per aver installato \n Bash!Karaoke ! \n\n Puoi lanciarlo, \n in un terminale, \n digitando : \n \"bashkaraoke\" \n dopodiche', \n non dimenticarti \n di configurare \n il font... \n\n\n Divertiti !   ;-)"
+[ "${l}" = "EN" ] && echo -e "Bash!Karaoke successfully installed ! \n\n Thanks for installing \n Bash!Karaoke ! \n\n You would launch it, \n in a terminal, \n typing : \n \"bashkaraoke\" \n after that, \n don't forget \n to configure font...\n\n\n Enjoy !   ;-)"
+
 clean_temp
 
