@@ -96,11 +96,10 @@ or
 
 USE :
 Bash!Karaoke is four programs:
-1) bashkaraoke-gtk ( fullscreen interface )
-2) bashkaraoke ( songs database manager, player configurator & frontend -not fullscreen- )
-3) hyperkar ( the bare "player" -fullscreen- )
-4) xtermkar ( the bare "player" -not fullscreen- )
-5) bk-extractor ( it extracts song lyric )
+1) bashkaraoke ( songs database manager, player configurator & frontend )
+2) hyperkar ( the bare "player" -fullscreen- )
+3) xtermkar ( the bare "player" -not fullscreen- )
+4) bk-extractor ( it extracts song lyric )
 
 First of all, launch bashkaraoke, you will see the main menu. 
 Before to sing, you have to configure the player a little  :-P  ... 
@@ -288,11 +287,10 @@ oppure
 
 USO :
 Bash!Karaoke consta di quattro programmi:
-1) bashkaraoke-gtk ( interfaccia fullscreen )
-1) bashkaraoke ( gestore del database delle canzoni, configuratore del lettore & frontend del lettore -non fullscreen- )
-3) hyperkar ( il semplice "lettore" -fullscreen- )
-4) xtermkar ( il semplice "lettore" -non fullscreen- )
-5) bk-extractor ( estrae il testo delle canzoni )
+1) bashkaraoke ( gestore del database delle canzoni, configuratore del lettore & frontend del lettore )
+2) hyperkar ( il semplice "lettore" -fullscreen- )
+3) xtermkar ( il semplice "lettore" -non fullscreen- )
+4) bk-extractor ( estrae il testo delle canzoni )
 
 Prima di tutto, lancia bashkaraoke, vedrai il menu principale. 
 Prima di buttarti subito a cantare, devi configurare il lettore un po' :-P ... 
