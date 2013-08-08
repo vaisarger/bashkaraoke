@@ -1,11 +1,11 @@
-8.0.6
+9.0.0
 
 -----------------------------------------------------
 -----------------------------------------------------
 ENGLISH
 -------
 
-Bash!Karaoke version : "8.0.6"
+Bash!Karaoke version : "9.0.0"
 
 -------
 
@@ -25,11 +25,10 @@ all "lyric extraction -> ( midi playing & text tracing )" entire task performed 
 
 Other karaoke files are waiting a player... ;-)
 
-Since version 5.0.0 we are working to add fullscreen feature to program, but it's still in development.
-
 
 
 CHANGELOG :
+- 9.0.0 -> changes for debian policy compliance
 - 8.0.0 -> "bashkar" -> "xtermkar", created "hyperkar" (fullscreen) to use any HTML viewer
 - 7.0.0 -> BashKaraoke is housed in GitHub
 - 6.0.0 -> backend is modularized: Timidity becomes one of many possible backends, database changed, *OUT (-i option) updates database rows
@@ -161,6 +160,7 @@ THANKS :
 18) Thunor for his nice interface "Gtkdialog"...
 19) GitHub for housing B!K project...
 20) Stefano Di Vito for Javascript files, without them HTML player would not work...
+21) Lucio Messina for Debian policy compliance support and packaging...
 
 
 
@@ -194,7 +194,7 @@ LINKS :
 ITALIANO
 -------
 
-Versione di Bash!Karaoke : "8.0.6"
+Versione di Bash!Karaoke : "9.0.0"
 
 -------
 
@@ -220,6 +220,7 @@ Dalla versione 5.0.0 esiste anche lo script python "bashkaraoke-gtk" che aggiung
 
 
 CHANGELOG :
+- 9.0.0 -> modifiche per la compatibilità con la Debian policy
 - 8.0.0 -> "bashkar" -> "xtermkar", creato "hyperkar" (fullscreen) per usare qualsiasi visualizzatore HTML
 - 7.0.0 -> BashKaraoke è ospitato in GitHub
 - 6.0.0 -> il backend e' modularizzato: Timidity diventa uno dei tanti backends possibili, il database e' cambiato, *OUT (opzione -i) aggiorna le righe del database 
@@ -351,6 +352,7 @@ RINGRAZIAMENTI :
 18) Thunor per la graziosa interfaccia "Gtkdialog"...
 19) GitHub per ospitare il progetto B!K...
 20) Stefano Di Vito per i files in Javascript, senza i quali il lettore HTML non funzionerebbe...
+21) Lucio Messina per il supporto per la compatibilità con la Debian policy e la pacchettizzazione...
 
 
 
