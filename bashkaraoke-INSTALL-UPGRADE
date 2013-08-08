@@ -157,7 +157,7 @@ fi
 #############################################
 #
 # PHEWWWWWW!!!... EVERYTHING'S OK!!!    :-)
-#sleep 1 # ...let's go ahead: only *4* steps :
+#sleep 1 # ...let's go ahead: only few steps :
 # 1)
 for file in "src/bashkaraoke" "src/hyperkar" "src/xtermkar" "src/bashkaraoke_FILES/bashkaraoke_COMMON" "src/bashkaraoke_FILES/bashkaraoke_CORE" "src/bashkaraoke_FILES/bashkaraoke_OUT" "src/bashkaraoke_FILES/bashkaraoke_EXTRACTOR"
 	do
@@ -165,11 +165,9 @@ for file in "src/bashkaraoke" "src/hyperkar" "src/xtermkar" "src/bashkaraoke_FIL
 done && chmod 644 src/bashkaraoke_FILES/*.xpm src/bashkaraoke_FILES/*.png src/bashkaraoke_FILES/*.svg
 #
 # 2)
-
 #we need also to creare the /usr/bin and /usr/share/doc/bashkaraoke directory while packaging
 mkdir -p "${path_dir}"
 mkdir -p "${DOCDIR}"
-
 mkdir -p "${system_bk_dir}"
 #
 # 3)
@@ -181,11 +179,24 @@ cp "src/bashkaraoke" "src/hyperkar" "src/xtermkar" "${path_dir}/"
 [ -f "${path_dir}/bk-extractor" ] && rm "${path_dir}/bk-extractor" ; \
 [ ! -e "${path_dir}/bk-extractor" ] && ln -s "${system_bk_dir}/bashkaraoke_FILES/bashkaraoke_EXTRACTOR" "${path_dir}/bk-extractor"
 #
+# 5) in additional, let's copy README and license files into /usr/share/doc/bashkaraoke
+cp LICENSE README ${DOCDIR}
+#
+# 6) Let's copy desktop entry
+application_name_file="bashkaraoke.desktop"
+application_names_dir="/usr/share/applications"
+[ ! -d "${application_names_dir}" ] && application_names_dir="/usr/local/share/applications"
+cp "src/bashkaraoke_FILES/${application_name_file}" "${application_names_dir}"/
+#
+# 7) Let's copy icon
+icon_name_file="bashkaraoke.png"
+icon_names_dir="/usr/share/icons"
+[ ! -d "${icon_names_dir}" ] && icon_names_dir="/usr/local/share/icons"
+cp "src/bashkaraoke_FILES/${icon_name_file}" "${icon_names_dir}"/
+#
+#
 #############################################
 #
-
-#5) in additional, let's copy README and license files into /usr/share/doc/bashkaraoke
-cp LICENSE README ${DOCDIR}
 
 
 #let's comment all the windows style installation dialog while packaging

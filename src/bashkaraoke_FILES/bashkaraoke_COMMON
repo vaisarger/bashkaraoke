@@ -3,7 +3,6 @@
 #########################
 #
 # Copyright (C) 2013 Vittorio Cagnetta
-# Copyright (C) 2013 Davide Depau
 #
 # Author: Vittorio Cagnetta <vaisarger@gmail.com>
 #
@@ -23,16 +22,22 @@
 #########################
 #
 # Let's start...
-#easybashgui_path="/usr/local/bin/easybashgui" #Set it if your system doesn't know where is EasyBashGUI...
+#easybashgui_path="/usr/bin/easybashgui" #Set it if your system doesn't know where is EasyBashGUI...
 #
 ##
 #
-export dir_Karaoke="${HOME}/.bashkaraoke"
+export dir_Karaoke="${HOME}/.config/bashkaraoke"
 if [ ! -d "${dir_Karaoke}" ]
 	then
+	[ ! -d "${HOME}/.config" ] && mkdir "${HOME}/.config"
 	if [ -d "${HOME}/.bash!karaoke" ]
 		then
 		mv -f "${HOME}/.bash!karaoke" "${dir_Karaoke}"
+		#
+	elif [ -d "${HOME}/.bashkaraoke" ]
+		then
+		mv -f "${HOME}/.bashkaraoke" "${dir_Karaoke}"
+		#
 	else
 		mkdir "${dir_Karaoke}" && chmod 777 "${dir_Karaoke}"
 	fi
@@ -104,7 +109,7 @@ export l
 #
 ####################################
 #
-BK_VERSION_NUMBER="8.0.5"
+BK_VERSION_NUMBER="9.0.0"
 #
 : version_file
 echo "${BK_VERSION_NUMBER}" 1> "${dir_Karaoke}/${version_file}"
@@ -2778,6 +2783,7 @@ go_bk()
 		##########################
 		#
 		export HTML_file_to_read="${dir_Karaoke}"/.lyrics
+		touch "${HTML_file_to_read}"
 		HTML_file_to_read__directory_path="$(dirname "${HTML_file_to_read}" )"
 		#
 		[ ! -d "${HTML_file_to_read__directory_path}"/css ] && mkdir "${HTML_file_to_read__directory_path}"/css
