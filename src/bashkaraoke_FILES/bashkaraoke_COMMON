@@ -39,7 +39,7 @@ if [ ! -d "${dir_Karaoke}" ]
 		mv -f "${HOME}/.bashkaraoke" "${dir_Karaoke}"
 		#
 	else
-		mkdir "${dir_Karaoke}" && chmod 777 "${dir_Karaoke}"
+		mkdir -p "${dir_Karaoke}" && chmod 777 "${dir_Karaoke}"
 	fi
 fi
 #
@@ -2820,8 +2820,8 @@ go_bk()
 				cd - 1>/dev/null
 				if [ ${uscita_di_embedded_browser} -ne 0 ]
 					then
-					[ "${l}" = "IT" ] && alert_message "Sembra che il browser \"embedded\" \n sia uscito inaspettatamente. \n Per favore, nota che esso \n ha bisogno di Python e Webkit \n per funzionare. \n\n Potresti considerare \n di cambiare \n il browser di fullscreen \n in bashkaraoke \n -> \"CONFIGURA\" -> \"Varie...\""
-					[ "${l}" = "EN" ] && alert_message "It seems that \"embedded\" browser \n exited with an error. \n Please, note that \n it needs Python and Webkit \n to work. \n\n You would consider \n to change fullscreen browser \n in bashkaraoke \n -> \"CONFIGURE\" -> \"Misc...\""
+					[ "${l}" = "IT" ] && alert_message "Sembra che il browser \"embedded\" \n sia uscito inaspettatamente. \n Per favore, nota che ha bisogno di: \n GTK3 (gir1.2-gtk-3.0), \n WebKit (gir1.2-webkit-3.0), \n Python, \n python-gi, \n gobject-introspection \n per funzionare. \n\n Potresti considerare \n di cambiare \n il browser di fullscreen \n in bashkaraoke \n -> \"CONFIGURA\" -> \"Varie...\""
+					[ "${l}" = "EN" ] && alert_message "It seems that \"embedded\" browser \n exited with an error. \n Please, note that \n it needs: \n GTK3 (gir1.2-gtk-3.0), \n WebKit (gir1.2-webkit-3.0), \n Python, \n python-gi, \n gobject-introspection \n to work. \n\n You would consider \n to change fullscreen browser \n in bashkaraoke \n -> \"CONFIGURE\" -> \"Misc...\""
 				fi
 			else
 				${bkbrowser} file://"${HTML_file_to_read}"
