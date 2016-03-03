@@ -577,10 +577,11 @@ elif [ "${output_mode}" = "h" ]
 	<body>
 		<div class="textBox" >
 			<span>'
+	#
 	export intestazione_HTML='<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>'"${HTML_karaoke_scriptname}"': HTML window vers.'"${EMBEDDED_BROWSER_VERSION}"'...</title>
+	<title>'"${HTML_karaoke_scriptname}"': '"$(basename "${midi}" | iconv -f "${char_encoding}" ) (${extract_way}#$(basename "${soundfont}" ))"'</title>
 	<!-- <script src="js/jquery.min.js"></script> -->
 	<!-- <script src="js/jquery.textfill.min.js"></script> -->
 	<!-- <script src="js/config.js"></script> -->

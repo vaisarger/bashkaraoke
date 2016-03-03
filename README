@@ -1,11 +1,11 @@
-10.0.0
+10.0.3
 
 -----------------------------------------------------
 -----------------------------------------------------
 ENGLISH
 -------
 
-Bash!Karaoke version : "10.0.0"
+Bash!Karaoke version : "10.0.3"
 
 -------
 
@@ -30,6 +30,8 @@ Since version 5.0.0 we are working to add fullscreen feature to program. Finally
 
 
 CHANGELOG :
+- 10.0.3 -> Hyperkar window title like Xtermkar
+- 10.0.1/10.0.2 -> (troubles with Github...)
 - 10.0.0 -> .lyrics becomes a fifo, Firefox is the default HTML viewer, "GSW" interface "search in database" feature bug fixed
 - 9.0.0 -> Debian compliant
 - 8.0.0 -> "bashkar" -> "xtermkar", created "hyperkar" (fullscreen) to use any HTML viewer
@@ -197,7 +199,7 @@ LINKS :
 ITALIANO
 -------
 
-Versione di Bash!Karaoke : "10.0.0"
+Versione di Bash!Karaoke : "10.0.3"
 
 -------
 
@@ -222,6 +224,7 @@ Dalla versione 5.0.0 esiste la funzionalità fullscreen al programma (in svilupp
 
 
 CHANGELOG :
+- 10.0.3 -> Titolo finestra di Hyperkar come Xtermkar
 - 10.0.0 -> .lyrics diventa fifo, Firefox è il visualizz. HTML di default, risolto bug nella funz. "cerca nel database" dell'interfaccia "GSW"
 - 9.0.0 -> conforme alla politica di Debian
 - 8.0.0 -> "bashkar" -> "xtermkar", creato "hyperkar" (fullscreen) per usare qualsiasi visualizzatore HTML

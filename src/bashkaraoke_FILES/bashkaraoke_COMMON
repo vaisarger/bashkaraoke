@@ -2860,7 +2860,7 @@ go_bk()
 		[ ${#bk_OUT} -eq 0 ] && alert_message "Error: \n no \"\${bk_OUT}\" set..."
 		[ ${#HTML_file_to_read} -eq 0 ] && alert_message "Error: \n no \"\${HTML_file_to_read}\" set..."
 		#
-		exec xterm -title "Playing: $(basename "${midi}" | iconv -f "${char_encoding}" )" -geometry 72x1 -e "${bk_OUT}" -o h -f "${HTML_file_to_read}" "${midi}"
+		exec xterm -title "$(basename "${midi}" | iconv -f "${char_encoding}" )" -geometry 72x1 -e "${bk_OUT}" -o h -f "${HTML_file_to_read}" "${midi}"
 		}
 	#
 	##
