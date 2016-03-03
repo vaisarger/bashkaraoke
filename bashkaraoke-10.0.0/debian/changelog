@@ -1,0 +1,5 @@
+bashkaraoke (8.0.7~precise-1) precise; urgency=low
+
+  * Initial release (Closes: "needs packaging")
+
+ -- Lucio Messina <lucio.messina@mensa.it>  Sun, 07 Jul 2013 15:32:14 +0200
