@@ -104,7 +104,7 @@ export l
 #
 ####################################
 #
-BK_VERSION_NUMBER="10.0.0"
+BK_VERSION_NUMBER="10.0.3"
 #
 : version_file
 echo "${BK_VERSION_NUMBER}" 1> "${dir_Karaoke}/${version_file}"
@@ -4545,8 +4545,8 @@ BLOCCO_bkXbuc_xplaymidi
 		<label/>
 		<label>
 			<code>
-			[ "${l}" = "IT" ] && echo "BashKaraoke e' un programma karaoke open source, fondamentalmente un frontend di backend players (come Timidity)."
-			[ "${l}" = "EN" ] && echo "BashKaraoke is an open source karaoke program, basically it's a backend player frontend (like Timidity)."
+			[ "${l}" = "IT" ] && echo "BashKaraoke, un programma karaoke open source, frontend di backend players (come Timidity)."
+			[ "${l}" = "EN" ] && echo "BashKaraoke is an open source karaoke program, basically it is a backend player frontend (like Timidity)."
 			</code>
 		</label>
 		<label/>
@@ -4587,7 +4587,7 @@ outputta_bkXgtkdialog()
 	{
 	cat <<BLOCCO_bkXgtkdialog
 	
-<window title="Bash!Karaoke ${BK_VERSION_NUMBER}: bash the microphone and break your music!" default_height="${height}" default_width="${width}" window_position="1" icon-name="gtk-dialog-info">
+<window title="Bash!Karaoke ${BK_VERSION_NUMBER}" default_height="${height}" default_width="${width}" window_position="1" icon-name="gtk-dialog-info">
 	<vbox scrollable="true">
 		$(
 		[ "${l}" = "IT" ] && echo "<notebook labels=\"Suona|Configura|Informazioni\">" 
