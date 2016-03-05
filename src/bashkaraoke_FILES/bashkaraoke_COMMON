@@ -104,7 +104,7 @@ export l
 #
 ####################################
 #
-BK_VERSION_NUMBER="10.0.3"
+BK_VERSION_NUMBER="10.0.4"
 #
 : version_file
 echo "${BK_VERSION_NUMBER}" 1> "${dir_Karaoke}/${version_file}"
