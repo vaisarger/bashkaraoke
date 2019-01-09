@@ -2,8 +2,7 @@
 #
 #########################
 #
-# Copyright (C) 2016 Vittorio Cagnetta
-# Copyright (C) 2016 Davide Depau
+# Copyright (C) 2019 Vittorio Cagnetta
 #
 # Author: Vittorio Cagnetta <vaisarger@gmail.com>
 #
@@ -26,6 +25,8 @@
 # ${DESTDIR} should be set throught "export DESTDIR=..." in debian/rules while packaging, or take it from the first command-line argument
 [ -z "${DESTDIR}" ] && DESTDIR=$1
 #the script should work fine even if DESTDIR is not set
+
+BK_VERSION_NUMBER="10.1.0"
 
 export system_bk_dir="${DESTDIR}/usr/share/bashkaraoke"
 export path_dir="${DESTDIR}/usr/bin"
@@ -193,8 +194,8 @@ cp LICENSE README ${DOCDIR}
 #[ "${l}" = "EN" ] && ok_message "Bash!Karaoke successfully installed ! \n\n Thanks for installing \n Bash!Karaoke ! \n\n You would launch it, \n in a terminal, \n typing : \n \"bashkaraoke\" \n after that, \n don't forget \n to configure font...\n\n\n Enjoy !   ;-)" 
 #
 
-[ "${l}" = "IT" ] && echo -e "Installazione terminata \n con successo ! \n\n Grazie per aver installato \n Bash!Karaoke ! \n\n Puoi lanciarlo, \n in un terminale, \n digitando : \n \"bashkaraoke\" \n dopodiche', \n non dimenticarti \n di configurare \n il font... \n\n\n Divertiti !   ;-)"
-[ "${l}" = "EN" ] && echo -e "Bash!Karaoke successfully installed ! \n\n Thanks for installing \n Bash!Karaoke ! \n\n You would launch it, \n in a terminal, \n typing : \n \"bashkaraoke\" \n after that, \n don't forget \n to configure font...\n\n\n Enjoy !   ;-)"
+[ "${l}" = "IT" ] && echo -e "\n\nBash!Karaoke v.${BK_VERSION_NUMBER} installata \n con successo ! \n\nGrazie per aver installato \n Bash!Karaoke ! \n\n Puoi lanciarlo, \n in un terminale, \n digitando : \n \"bashkaraoke\" \n dopodiche', \n non dimenticarti \n di configurare \n il font... \n\n\n Divertiti !   ;-)"
+[ "${l}" = "EN" ] && echo -e "\n\nBash!Karaoke v.${BK_VERSION_NUMBER} successfully installed ! \n\nThanks for installing \n Bash!Karaoke ! \n\n You would launch it, \n in a terminal, \n typing : \n \"bashkaraoke\" \n after that, \n don't forget \n to configure font...\n\n\n Enjoy !   ;-)"
 
 clean_temp
 

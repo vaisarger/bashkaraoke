@@ -2,8 +2,7 @@
 #
 #########################
 #
-# Copyright (C) 2016 Vittorio Cagnetta
-# Copyright (C) 2016 Davide Depau
+# Copyright (C) 2019 Vittorio Cagnetta
 #
 # Author: Vittorio Cagnetta <vaisarger@gmail.com>
 #
@@ -104,7 +103,7 @@ export l
 #
 ####################################
 #
-BK_VERSION_NUMBER="10.0.4"
+BK_VERSION_NUMBER="10.1.0"
 #
 : version_file
 echo "${BK_VERSION_NUMBER}" 1> "${dir_Karaoke}/${version_file}"
@@ -182,6 +181,17 @@ if [ ${#esistenza_bashkaraoke_gtk} -gt 0 ]
 	then
 	bashkaraoke_gtk="SI"
 fi #if [ ${#esistenza_bashkaraoke_gtk} -gt 0 ]
+#
+##
+#
+gtktimidity_binary="gtkmidi"
+esistenza_gtktimidity_binary="$(type "${gtktimidity_binary}" 2> /dev/null )"
+if [ ${#esistenza_gtktimidity_binary} -gt 0 ]
+	then
+	export plain_timidity="${gtktimidity_binary}"
+else
+	export plain_timidity="timidity"
+fi #if [ ${#esistenza_gtktimidity_binary} -gt 0 ]
 #
 ##
 #
@@ -293,6 +303,7 @@ export buc_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_BUC.xpm"
 export gsw_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_GSW.xpm"
 export gsw_BK_DOUBLE_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_DOUBLE.xpm"
 export window_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_icon.png"
+export window_BK_icon_xpm="$(pwd)/bashkaraoke_FILES/bashkaraoke_icon.xpm"
 export black_icon="$(pwd)/bashkaraoke_FILES/black.png"
 export red_icon="$(pwd)/bashkaraoke_FILES/red.png"
 export green_icon="$(pwd)/bashkaraoke_FILES/green.png"
@@ -307,6 +318,7 @@ export gsw_sing_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_icon.png"
 #
 export embedded_browser_dir="$(pwd)/realtime_dialog_${EMBEDDED_BROWSER_VERSION}"
 export embedded_browser="${embedded_browser_dir}/realtime_dialog.py"
+export bestbrowser=palemoon
 #
 ##
 #
@@ -598,12 +610,19 @@ crea_rc_default()
 	#
 	bashkaraoke_gtk="NO"
 	#
-	firefox_path="$(type -p "firefox" 2>/dev/null )"
-		if [ ${#firefox_path} -gt 0 ]
+	: bestbrowser
+	bestbrowser_path="$(type -p "${bestbrowser}" 2>/dev/null )"
+		if [ ${#bestbrowser_path} -gt 0 ]
 			then
-			echo "export bkbrowser=\"${firefox_path}\""
+			echo "export bkbrowser=\"${bestbrowser_path}\""
 		else
-			echo 'export bkbrowser="embedded"'
+			firefox_path="$(type -p "firefox" 2>/dev/null )"
+			if [ ${#firefox_path} -gt 0 ]
+				then
+				echo "export bkbrowser=\"${firefox_path}\""
+			else
+				echo 'export bkbrowser="embedded"'
+			fi
 		fi
 	#
 	###
@@ -1883,21 +1902,38 @@ modifica_rc()
 						risposta=${?}
 					fi
 					if [ ${risposta} -eq 0 ]
-						then
+						then						
+						bestbrowser_path="$(type -p "${bestbrowser}" 2>/dev/null )"						
 						firefox_path="$(type -p "firefox" 2>/dev/null )"
-						if [ ${#firefox_path} -gt 0 -a ${#BROWSER} -gt 0 ]
+						if [ ${#bestbrowser_path} -gt 0 -a ${#firefox_path} -gt 0 -a ${#BROWSER} -gt 0 ]
+							then
+							menu "${bestbrowser_path}" "${firefox_path}" "${BROWSER}" "embedded" "[CUSTOM]"
+							#
+						elif [ ${#bestbrowser_path} -gt 0 -a ${#firefox_path} -eq 0 -a ${#BROWSER} -gt 0 ]
+							then
+							menu "${bestbrowser_path}" "${BROWSER}" "embedded" "[CUSTOM]"
+							#
+						elif [ ${#bestbrowser_path} -gt 0 -a ${#firefox_path} -gt 0 -a ${#BROWSER} -eq 0 ]
+							then
+							menu "${bestbrowser_path}" "${firefox_path}" "embedded" "[CUSTOM]"
+							#
+						elif [ ${#bestbrowser_path} -gt 0 -a ${#firefox_path} -eq 0 -a ${#BROWSER} -eq 0 ]
+							then
+							menu "${bestbrowser_path}" "embedded" "[CUSTOM]"
+							#
+						elif [ ${#bestbrowser_path} -eq 0 -a ${#firefox_path} -gt 0 -a ${#BROWSER} -gt 0 ]
 							then
 							menu "${firefox_path}" "${BROWSER}" "embedded" "[CUSTOM]"
 							#
-						elif [ ${#firefox_path} -eq 0 -a ${#BROWSER} -gt 0 ]
+						elif [ ${#bestbrowser_path} -eq 0 -a ${#firefox_path} -eq 0 -a ${#BROWSER} -gt 0 ]
 							then
 							menu "${BROWSER}" "embedded" "[CUSTOM]"
 							#
-						elif [ ${#firefox_path} -gt 0 -a ${#BROWSER} -eq 0 ]
+						elif [ ${#bestbrowser_path} -eq 0 -a ${#firefox_path} -gt 0 -a ${#BROWSER} -eq 0 ]
 							then
 							menu "${firefox_path}" "embedded" "[CUSTOM]"
 							#
-						elif [ ${#firefox_path} -eq 0 -a ${#BROWSER} -eq 0 ]
+						elif [ ${#bestbrowser_path} -eq 0 -a ${#firefox_path} -eq 0 -a ${#BROWSER} -eq 0 ]
 							then
 							menu "embedded" "[CUSTOM]"
 							#
@@ -1905,7 +1941,7 @@ modifica_rc()
 						browser_choice="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${browser_choice} -eq 0 ] && continue 2
 						if [ "${browser_choice}" = "[CUSTOM]" ]
 							then
-							message "Please, select a browser \n\n (Tip: download and select \"Firefox\"... )"
+							message "Please, select a browser \n\n (Tip: download and select \n \"${bestbrowser}\" or \"firefox\"... )"
 							fselect "/usr/bin"
 							browser_choice="$(0< "${dir_tmp}/${file_tmp}" )" ; [ ${#browser_choice} -eq 0 ] && continue 2
 						fi
@@ -2833,8 +2869,10 @@ go_bk()
 		GO_file_content="$(0< "${dir_Karaoke}/${go_file}" )"
 		if [ "${GO_file_content}" = "GO" ]
 			then
+			#
 			if [ "${bkbrowser}" = "${embedded_browser}" ]
 				then
+				#
 				embedded_browser_dir="$(dirname "${embedded_browser}" )"
 				cd "${embedded_browser_dir}"
 					./$(basename "${bkbrowser}" ) -f "${HTML_file_to_read}"
@@ -2845,8 +2883,23 @@ go_bk()
 					[ "${l}" = "IT" ] && alert_message "Sembra che il browser \"embedded\" \n sia uscito inaspettatamente. \n Per favore, nota che esso \n ha bisogno di Python e Webkit \n per funzionare. \n\n Potresti considerare \n di cambiare \n il browser di fullscreen \n in bashkaraoke \n -> \"CONFIGURA\" -> \"Varie...\""
 					[ "${l}" = "EN" ] && alert_message "It seems that \"embedded\" browser \n exited with an error. \n Please, note that \n it needs Python and Webkit \n to work. \n\n You would consider \n to change fullscreen browser \n in bashkaraoke \n -> \"CONFIGURE\" -> \"Misc...\""
 				fi
+				#
 			else
+				#
+				if [ "${bkbrowser##*/}" != "${bestbrowser}" ]
+					then
+					#
+					[ "${l}" = "IT" ] && alert_message "Per favore, considera di installare/usare \n il browser \"${bestbrowser}\" \n per la migliore esperienza di karaoke."
+					[ "${l}" = "EN" ] && alert_message "Please, consider to install/set \n \"${bestbrowser}\" browser \n for best karaoke experience."
+					#
+				fi
+				#
+				###################
+				###########################################
 				${bkbrowser} file://"${HTML_file_to_read}"
+				###########################################
+				###################
+				#
 			fi &
 			:
 		fi
@@ -2985,12 +3038,22 @@ crea_database()
 	{
 	extensions=( ${extensions_var} )
 	#
+	dir_canzoni="${1}"
+	#
 	while :
 		do
-		[ "${l}" = "IT" ] && message "Prego, \n seleziona \n la directory \n delle canzoni..."
-		[ "${l}" = "EN" ] && message "Please, \n select \n songs directory..."
 		#
-		dselect ; dir_canzoni="$(0< "${dir_tmp}/${file_tmp}" )" && if_arg_is_an_empty_variable_then_exit "dir_canzoni"
+		if [ ${#dir_canzoni} -eq 0 ]
+			then
+			#
+			[ "${l}" = "IT" ] && message "Prego, \n seleziona \n la directory \n delle canzoni..."
+			[ "${l}" = "EN" ] && message "Please, \n select \n songs directory..."
+			#
+			dselect ; dir_canzoni="$(0< "${dir_tmp}/${file_tmp}" )" && if_arg_is_an_empty_variable_then_exit "dir_canzoni"
+			#
+		fi
+		#
+		: dir_canzoni
 		#
 		if [ -d "${dir_canzoni}" ]
 			then
@@ -3007,7 +3070,7 @@ crea_database()
 			risposta=${?}
 		elif [ "${l}" = "EN" ]
 			then
-			question "Selected dir. is: \n$(echo "${dir_canzoni}" | gsed s\#'/'#'\n/'#g ) \n\n Continue?"
+			question "Selected dir. is: \n$(echo "${dir_canzoni}" | gsed s\#'/'#'\n/'#g ) \n\n Will I continue?"
 			risposta=${?}
 		fi
 		if [ ${risposta} -eq 0 ]
@@ -3015,6 +3078,7 @@ crea_database()
 			break
 		elif [ ${risposta} -eq 1 ]
 			then
+			unset dir_canzoni
 			continue
 		else
 			ciao
@@ -3034,7 +3098,7 @@ crea_database()
 	#
 	##
 	#
-	IFS=$'\n' ; array_canzoni=( $(find "${dir_canzoni}" -type f 2>/dev/null | \
+	IFS=$'\n' ; array_canzoni=( $(find "${dir_canzoni%/}/" -type f 2>/dev/null | \
 						iconv -f "${char_encoding}" | \
 						grep -Ei "($(for (( index=0 ; index < ${#extensions[@]} ; index++ ))
 								do
@@ -3042,9 +3106,12 @@ crea_database()
 							done | gsed s\#'.$'#''# ))" | \
 						sort ) ) ; IFS=$' \t\n'
 	#
-	if [ ${#array_canzoni[@]} -eq 0 ]
+	if [ ${#array_canzoni[@]} -gt 0 ]
 		then
-		IFS=$'\n' ; array_canzoni=( $(find "${dir_canzoni}" -type f 2>/dev/null | \
+		:
+	else
+		# => ${#array_canzoni[@]} = 0
+		IFS=$'\n' ; array_canzoni=( $(find "${dir_canzoni%/}/" -type f 2>/dev/null | \
 						grep -Ei "($(for (( index=0 ; index < ${#extensions[@]} ; index++ ))
 								do
 								echo -n "${extensions[${index}]}$|"
@@ -3053,74 +3120,128 @@ crea_database()
 	fi
 	#
 	##
-	#
 	terminate_wait_for
+	##
+	#
+	if [ "${l}" = "IT" ]
+		then 
+		question "Trovate ${#array_canzoni[@]} canzoni... \n\n Vuoi cercare i midi \n con un settaggio predefinito?"
+		risposta="${?}"
+	elif [ "${l}" = "EN" ]
+		then 
+		question "Found ${#array_canzoni[@]} songs... \n\n Do you want find your midis \n with a default setting?"
+		risposta="${?}"
+	fi
+	if [ ${risposta} -eq 0 ]
+		then
+		IFS=$'\n' ; array_canzoni=( $(find "${dir_canzoni%/}/" -type f 2>/dev/null | \
+						iconv -f "ISO-8859-1" | \
+						grep -Ei "($(for (( index=0 ; index < ${#extensions[@]} ; index++ ))
+								do
+								echo -n "${extensions[${index}]}$|"
+							done | gsed s\#'.$'#''# ))" | \
+						sort ) ) ; IFS=$' \t\n'
+		#
+		if [ ${#array_canzoni[@]} -gt 0 ]
+			then
+			[ "${l}" = "IT" ] && ok_message "Trovate in questo modo ${#array_canzoni[@]} canzoni. \n Andiamo avanti..."
+			[ "${l}" = "EN" ] && ok_message "Found in this way ${#array_canzoni[@]} songs. \n Let's go ahead..."
+		else
+			[ "${l}" = "IT" ] && alert_message "Mi dispiace: trovate ${#array_canzoni[@]} canzoni. \n :-("
+			[ "${l}" = "EN" ] && alert_message "Sorry: found ${#array_canzoni[@]} songs. \n :-("
+		fi
+		#
+	elif [ ${risposta} -eq 1 ]
+		then
+		if [ ${#array_canzoni[@]} -gt 0 ]
+			then
+			[ "${l}" = "IT" ] && ok_message "OK. \n Andiamo avanti..."
+			[ "${l}" = "EN" ] && ok_message "OK. \n Let's go ahead..."
+		else
+			[ "${l}" = "IT" ] && alert_message "OK. \n Andiamo avanti..."
+			[ "${l}" = "EN" ] && alert_message "OK. \n Let's go ahead..."
+		fi
+	else
+		ciao
+	fi
 	#
 	####
 	####
 	#
 	: array_canzoni[@]
-		{
-		for (( index=0 ; index < ${#array_canzoni[@]} ; index++ ))
-			do
+	if [ ${#array_canzoni[@]} -gt 0 ]
+		then
+		#
+		###########################
+			{
+			for (( index=0 ; index < ${#array_canzoni[@]} ; index++ ))
+				do
+				#
+				path_canzone="$(echo "${array_canzoni[${index}]}" | gsed s\#"^${HOME}"#'~'# )"
+				#
+				####
+				######
+				eval array_dati_database[${index}]=\"${path_canzone}\"
+				######
+				####
+				#
+				echo "PROGRESS"
+				#
+			done
 			#
-			path_canzone="$(echo "${array_canzoni[${index}]}" | gsed s\#"^${HOME}"#'~'# )"
+			##
 			#
-			####
-			######
-			eval array_dati_database[${index}]=\"${path_canzone}\"
-			######
-			####
+			[ "${l}" = "IT" ] && wait_for "Inizializzazione \n del database (1)..."
+			[ "${l}" = "EN" ] && wait_for "Database \n initializing (1)..."
+			# fase a) :
+			echo "[Bash!Karaoke Database]" 1> "${database}"
+			dati_database="$(for (( index=0 ; index < ${#array_dati_database[@]} ; index++ ))
+						do
+						# Old database composed by file path only:
+						#echo "${array_dati_database[${index}]}"
+						#
+						# Current database:
+						# id="""num.progressivo""", path="""/path/to/file.kar""", title="""Canzone stupenda""", artist="""Cantante Stonatissimo""", info="""Futili informazioni sulla canzone""", duration="""159""", completed="""false"""
+						#echo "id=\"\"\"${index}\"\"\", path=\"\"\"${array_dati_database[${index}]}\"\"\", title=\"\"\"\"\"\", artist=\"\"\"\"\"\", info=\"\"\"\"\"\", duration=\"\"\"\"\"\"", completed=\"\"\"false\"\"\"
+						#
+						echo -e "id=${index}\tpath=${array_dati_database[${index}]}\ttitle=\tartist=\tinfo=\tduration=\tcompleted=false\t"
+						#
+					done )"
+			# fase b) :
+			echo "${dati_database}" 1>> "${database}"
 			#
-			echo "PROGRESS"
+			terminate_wait_for
 			#
-		done
+			##
+			#
+			} | \
+				progress "$(if [ "${l}" = "IT" ]; 
+							then
+							echo "Creazione \n del database \n di ${#array_canzoni[@]} canzoni..."
+						elif [ "${l}" = "EN" ]
+							then
+							echo "${#array_canzoni[@]} songs \n database \n creation..."
+						fi 
+						)" "${#array_canzoni[@]}"
 		#
 		##
 		#
-		[ "${l}" = "IT" ] && wait_for "Inizializzazione \n del database (1)..."
-		[ "${l}" = "EN" ] && wait_for "Database \n initializing (1)..."
-		# fase a) :
-		echo "[Bash!Karaoke Database]" 1> "${database}"
-		dati_database="$(for (( index=0 ; index < ${#array_dati_database[@]} ; index++ ))
-					do
-					# Old database composed by file path only:
-					#echo "${array_dati_database[${index}]}"
-					#
-					# Current database:
-					# id="""num.progressivo""", path="""/path/to/file.kar""", title="""Canzone stupenda""", artist="""Cantante Stonatissimo""", info="""Futili informazioni sulla canzone""", duration="""159""", completed="""false"""
-					#echo "id=\"\"\"${index}\"\"\", path=\"\"\"${array_dati_database[${index}]}\"\"\", title=\"\"\"\"\"\", artist=\"\"\"\"\"\", info=\"\"\"\"\"\", duration=\"\"\"\"\"\"", completed=\"\"\"false\"\"\"
-					echo -e "id=${index}\tpath=${array_dati_database[${index}]}\ttitle=\tartist=\tinfo=\tduration=\tcompleted=false\t"
-					#
-				done )"
-		# fase b) :
-		echo "${dati_database}" 1>> "${database}"
-		#
+		[ "${l}" = "IT" ] && wait_for "Database \n initializing (2)..."
+		[ "${l}" = "EN" ] && wait_for "Inizializzazione \n del database (2)..."
+		#var_database="$(cat "${database}" )"
+		#var_database="$(gsed -n s\#'^.*path="""\(.*\)""", title=.*$'#'\1'#p 0< "${database}" )"
+		var_database="$(gsed -n s\#'^.*path=\(.*\)\ttitle=.*$'#'\1'#p 0< "${database}" )"
+		sleep 1
 		terminate_wait_for
+		###########################
 		#
-		##
-		#
-		} | \
-			progress "$(if [ "${l}" = "IT" ]; 
-						then
-						echo "Creazione \n del database \n di ${#array_canzoni[@]} canzoni..."
-					elif [ "${l}" = "EN" ]
-						then
-						echo "${#array_canzoni[@]} songs \n database \n creation..."
-					fi 
-					)" "${#array_canzoni[@]}"
-	#
-	##
-	#
-	[ "${l}" = "IT" ] && wait_for "Database \n initializing (2)..."
-	[ "${l}" = "EN" ] && wait_for "Inizializzazione \n del database (2)..."
-	#var_database="$(cat "${database}" )"
-	#var_database="$(gsed -n s\#'^.*path="""\(.*\)""", title=.*$'#'\1'#p 0< "${database}" )"
-	var_database="$(gsed -n s\#'^.*path=\(.*\)\ttitle=.*$'#'\1'#p 0< "${database}" )"
-	sleep 1
-	terminate_wait_for
+	else
+		[ "${l}" = "IT" ] && alert_message "Nessun midi da registrare \n nel database delle canzoni."
+		[ "${l}" = "EN" ] && alert_message "No midi to record \n in the songs database."
+	fi
 	#
 	}
+export -f crea_database
 #
 #
 #
@@ -3557,8 +3678,20 @@ BLOCCO_bkXbuc_1
 						do
 						xterm -e "export supermode=dialog ; source easybashgui ; wait_for Searching${ext}... ; find ./ -type f | fgrep -i ${ext} 1>> "${database}_TEMP" ; sleep 1 ; terminate_wait_for; clean_temp"
 					done
-					cat "${database}_TEMP" | sed s\#'^./'#"$(pwd)/"# | sort 1> "${database}"
-					rm "${database}_TEMP"
+					#
+					#cat "${database}_TEMP" | gsed s\#'^./'#"$(pwd)/"# | sort 1> "${database}"
+					#
+					IFS=$'\n'
+					array_dati_database=( $(gsed s\#'^./'#"$(pwd)/"# 0< "${database}_TEMP" | gsed s\#"^${HOME}"#'~'# | sort ) )
+					IFS=$' \t\n'
+					#		
+					rm "${database}_TEMP" &
+					#
+					echo "[Bash!Karaoke Database]" 1> "${database}"
+					for (( index=0 ; index < ${#array_dati_database[@]} ; index++ ))
+						do
+						echo -e "id=${index}\tpath=${array_dati_database[${index}]}\ttitle=\tartist=\tinfo=\tduration=\tcompleted=false\t"
+					done 1>> "${database}"
 					#
 				cd - 1> /dev/null
 				#
@@ -3604,7 +3737,7 @@ BLOCCO_bkXbuc_1
 					[ "${l}" = "EN" ] && echo "Err.: \"${player}\" not found..."
 				fi
 				#
-				midi="$(echo "${midi}" | sed s\#'^~'#"${HOME}"# )"
+				midi="$(echo "${midi}" | gsed s\#'^~'#"${HOME}"# )"
 				if [ -f "${midi}" ]
 					then
 					export LD_LIBRARY_PATH="/usr/lib"
@@ -3625,7 +3758,7 @@ BLOCCO_bkXbuc_1
 					[ "${l}" = "EN" ] && echo "Err.: \"${player}\" not found..."
 				fi
 				#
-				midi="$(echo "${midi}" | sed s\#'^~'#"${HOME}"# )"
+				midi="$(echo "${midi}" | gsed s\#'^~'#"${HOME}"# )"
 				if [ -f "${midi}" ]
 					then
 					export LD_LIBRARY_PATH="/usr/lib"
@@ -3692,21 +3825,21 @@ BLOCCO_bkXbuc_pykar
 BLOCCO_bkXbuc_xplaymidi
 	fi
 	cat <<-'BLOCCO_bkXbuc_3'
-			<button text="timidity">
+			<button text="${plain_timidity}">
 				<code>
-				player="timidity"
+				player="${plain_timidity}"
 				if [ $(which "${player}" | wc -c ) -eq 0 ]
 					then
 					[ "${l}" = "IT" ] && echo "Err.: \"${player}\" non trovato..."
 					[ "${l}" = "EN" ] && echo "Err.: \"${player}\" not found..."
 				fi
 				#
-				midi="$(echo "${midi}" | sed s\#'^~'#"${HOME}"# )"
+				midi="$(echo "${midi}" | gsed s\#'^~'#"${HOME}"# )"
 				if [ -f "${midi}" ]
 					then
 					#xterm -cr "${background}" -uc -bg "${background}" -fg "${foreground_2}" -fn "${font}" -geometry ${columns}x2+20+400 -e timidity -idt "${midi}" &
 					#timidity ${soundfont_string} -A 105 --volume-compensation -iat "${midi}" &
-					timidity -A 105 --volume-compensation -igt "${midi}" &
+					${player} -A 105 --volume-compensation -igt "${midi}" &
 					:
 				else
 					[ "${l}" = "IT" ] && echo "Err.: \"${midi}\" non esiste..."
@@ -3982,7 +4115,7 @@ BLOCCO_bkXbuc_xplaymidi
 						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
 						[ "${l}" = "EN" ] && echo " [nothing to change...]"
 					else
-						cat "${ORIG}" | sed s\#'col.*n.*=".*"'#"columns=\"${columns}\""# 1> "${TEMP}"
+						cat "${ORIG}" | gsed s\#'col.*n.*=".*"'#"columns=\"${columns}\""# 1> "${TEMP}"
 						mv "${TEMP}" "${ORIG}"
 						echo " [OK]"
 					fi
@@ -4016,7 +4149,7 @@ BLOCCO_bkXbuc_xplaymidi
 						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
 						[ "${l}" = "EN" ] && echo " [nothing to change...]"
 					else
-						cat "${ORIG}" | sed s\#'font=".*"'#"font=\"${font}\""# 1> "${TEMP}"
+						cat "${ORIG}" | gsed s\#'font=".*"'#"font=\"${font}\""# 1> "${TEMP}"
 						mv "${TEMP}" "${ORIG}"
 						echo " [OK]"
 					fi
@@ -4087,7 +4220,7 @@ BLOCCO_bkXbuc_xplaymidi
 						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
 						[ "${l}" = "EN" ] && echo " [nothing to change...]"
 					else
-						cat "${ORIG}" | sed s\#'background=".*"'#"background=\"${background}\""# 1> "${TEMP}"
+						cat "${ORIG}" | gsed s\#'background=".*"'#"background=\"${background}\""# 1> "${TEMP}"
 						mv "${TEMP}" "${ORIG}"
 						echo " [OK]"
 					fi
@@ -4158,7 +4291,7 @@ BLOCCO_bkXbuc_xplaymidi
 						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
 						[ "${l}" = "EN" ] && echo " [nothing to change...]"
 					else
-						cat "${ORIG}" | sed s\#'foreground_1=".*"'#"foreground_1=\"${foreground_1}\""# 1> "${TEMP}"
+						cat "${ORIG}" | gsed s\#'foreground_1=".*"'#"foreground_1=\"${foreground_1}\""# 1> "${TEMP}"
 						mv "${TEMP}" "${ORIG}"
 						echo " [OK]"
 					fi
@@ -4229,7 +4362,7 @@ BLOCCO_bkXbuc_xplaymidi
 						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
 						[ "${l}" = "EN" ] && echo " [nothing to change...]"
 					else
-						cat "${ORIG}" | sed s\#'foreground_2=".*"'#"foreground_2=\"${foreground_2}\""# 1> "${TEMP}"
+						cat "${ORIG}" | gsed s\#'foreground_2=".*"'#"foreground_2=\"${foreground_2}\""# 1> "${TEMP}"
 						mv "${TEMP}" "${ORIG}"
 						echo " [OK]"
 					fi
@@ -4260,7 +4393,7 @@ BLOCCO_bkXbuc_xplaymidi
 					[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
 					[ "${l}" = "EN" ] && echo " [nothing to change...]"
 				else
-					cat "${ORIG}" | sed s\#'soundfont=".*"'#"soundfont=\"${soundfont}\""# 1> "${TEMP}"
+					cat "${ORIG}" | gsed s\#'soundfont=".*"'#"soundfont=\"${soundfont}\""# 1> "${TEMP}"
 					mv "${TEMP}" "${ORIG}"
 					echo " [OK]"
 				fi
@@ -4295,7 +4428,7 @@ BLOCCO_bkXbuc_xplaymidi
 						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
 						[ "${l}" = "EN" ] && echo " [nothing to change...]"
 					else
-						cat "${ORIG}" | sed s\#'extract_way=".*"'#"extract_way=\"${extract_way}\""# 1> "${TEMP}"
+						cat "${ORIG}" | gsed s\#'extract_way=".*"'#"extract_way=\"${extract_way}\""# 1> "${TEMP}"
 						mv "${TEMP}" "${ORIG}"
 						echo " [OK]"
 					fi
@@ -4329,7 +4462,7 @@ BLOCCO_bkXbuc_xplaymidi
 						[ "${l}" = "IT" ] && echo " [niente da cambiare...]"
 						[ "${l}" = "EN" ] && echo " [nothing to change...]"
 					else
-						cat "${ORIG}" | sed s\#'error_correction_chars=".*"'#"error_correction_chars=\"${error_correction_chars}\""# 1> "${TEMP}"
+						cat "${ORIG}" | gsed s\#'error_correction_chars=".*"'#"error_correction_chars=\"${error_correction_chars}\""# 1> "${TEMP}"
 						mv "${TEMP}" "${ORIG}"
 						echo " [OK]"
 					fi
@@ -4585,9 +4718,11 @@ BLOCCO_bkXbuc_3
 #
 outputta_bkXgtkdialog()
 	{
+	main_window_bkXgtkdialog_height=730
+	main_window_bkXgtkdialog_width=570
 	cat <<BLOCCO_bkXgtkdialog
 	
-<window title="Bash!Karaoke ${BK_VERSION_NUMBER}" default_height="${height}" default_width="${width}" window_position="1" icon-name="gtk-dialog-info">
+<window title="Bash!Karaoke ${BK_VERSION_NUMBER}" default_height="${main_window_bkXgtkdialog_height}" default_width="${main_window_bkXgtkdialog_width}" window_position="1" icon-name="${window_BK_icon}">
 	<vbox scrollable="true">
 		$(
 		[ "${l}" = "IT" ] && echo "<notebook labels=\"Suona|Configura|Informazioni\">" 
@@ -4698,10 +4833,10 @@ outputta_bkXgtkdialog()
 						</pixmap>
 						<text xalign="2">
 							$(
-							[ "${l}" = "IT" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} basata su Gtkdialog ${required_gtkdialog_first_field}.${required_gtkdialog_second_field}.${required_gtkdialog_third_field}
+							[ "${l}" = "IT" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} basata su Gtkdialog ${vers_gtkdialog_primo_campo}.${vers_gtkdialog_secondo_campo}.${vers_gtkdialog_terzo_campo} e EasyBashGUI v.${LIB_VERSION}
 					
 Bash!Karaoke e' un programma karaoke open source, fondamentalmente un frontend di backend players (come Timidity).\"</label>" 
-							[ "${l}" = "EN" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} based on Gtkdialog ${required_gtkdialog_first_field}.${required_gtkdialog_second_field}.${required_gtkdialog_third_field}
+							[ "${l}" = "EN" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} based on Gtkdialog ${vers_gtkdialog_primo_campo}.${vers_gtkdialog_secondo_campo}.${vers_gtkdialog_terzo_campo} and EasyBashGUI v.${LIB_VERSION}
 					
 Bash!Karaoke is an open source karaoke program, basically is a frontend to backend players (like Timidity).\"</label>" 
 							)
@@ -4749,7 +4884,7 @@ BLOCCO_bkXgtkdialog
 [ "${l}" = "IT" ] && export GSW_SEARCH_DIALOG_title="Bash!Karaoke: digita artista e/o canzone..."
 [ "${l}" = "EN" ] && export GSW_SEARCH_DIALOG_title="Bash!Karaoke: type artist and/or song name..."
 export GSW_SEARCH_DIALOG="
-	<window title=\"${GSW_SEARCH_DIALOG_title}\" window_position=\"1\" default_width=\"400\">"'
+	<window title=\"${GSW_SEARCH_DIALOG_title}\" window_position=\"1\" default_width=\"400\" icon-name=\"${window_BK_icon}\">"'
 		<vbox>
 			<frame>
 				<hbox>
@@ -4777,15 +4912,18 @@ export GSW_SEARCH_DIALOG="
 #
 #
 # <action type="command">${bk_extractor} "$CHOISES" 1>${info_file} ; export info_file ; bash -c "source ${bk_COMMON}; cat \"${info_file}\" | text ; clean_temp"</action>
+#
+list_window_bkXgtkdialog_height=730
+list_window_bkXgtkdialog_width=900
 [ "${l}" = "IT" ] && export GSW_LIST_DIALOG_title="Bash!Karaoke: seleziona il midi..."
 [ "${l}" = "EN" ] && export GSW_LIST_DIALOG_title="Bash!Karaoke: select midi..."
 export GSW_LIST_DIALOG="
-	<window title=\"${GSW_LIST_DIALOG_title}\" window_position=\"1\" default_width=\"500\">"'
+	<window title=\"${GSW_LIST_DIALOG_title}\" default_height=\"${list_window_bkXgtkdialog_height}\" default_width=\"${list_window_bkXgtkdialog_width}\" window_position=\"1\" icon-name=\"${window_BK_icon}\" >"'
 		<vbox>
 			<frame Midi list>
 				<table>
 					<variable>CHOISES</variable>
-					<input>sleep 2; cat "${dir_Karaoke}/lista_karaoke.txt"</input>
+					<input>sleep 1; cat '${dir_Karaoke}/${lista_karaoke}'</input>
 				</table>
 				<hbox>
 					<button>
@@ -4813,8 +4951,8 @@ export GSW_LIST_DIALOG="
 						<action type="closewindow">GSW_LIST_DIALOG</action>
 					</button>
 					<button>
-						<label>timidity</label>
-						<action type="command">timidity -A 105 --volume-compensation -igt "$CHOISES"</action>
+						<label>'${plain_timidity}'</label>
+						<action type="command">'${plain_timidity}' -A 105 --volume-compensation -igt "$CHOISES"</action>
 						<action type="closewindow">GSW_SEARCH_DIALOG</action>
 						<action type="closewindow">GSW_LIST_DIALOG</action>
 					</button>
@@ -4839,10 +4977,17 @@ export GSW_LIST_DIALOG="
 #
 #
 #
+########################
+# This is only a note...
+#
+# <action type="command">cd "$FILE_DIRECTORY" ; if [ -f "${database}" ] ; then mv "${database}" "${database}_OLD" ; fi ; echo "" 1> "${database}" ; for ext in ${extensions} ; do xterm -e "export supermode=dialog ; source easybashgui ; wait_for Searching${ext}... ; find ./ -type f | fgrep -i ${ext} 1>> "${database}_TEMP" ; sleep 1 ; terminate_wait_for; clean_temp" ; done ; cat "${database}_TEMP" | sed s\#'^./'#"$(pwd)/"# | sort 1> "${database}" ; rm "${database}_TEMP"</action>
+########################
+#
+#
 [ "${l}" = "IT" ] && export GSW_DIR_DIALOG_title="Bash!Karaoke: seleziona la cartella..."
 [ "${l}" = "EN" ] && export GSW_DIR_DIALOG_title="Bash!Karaoke: select directory..."
 export GSW_DIR_DIALOG="
-	<window title=\"${GSW_DIR_DIALOG_title}\" window_position=\"1\" default_width=\"400\">"'
+	<window title=\"${GSW_DIR_DIALOG_title}\" window_position=\"1\" default_width=\"400\" icon-name=\"${window_BK_icon}\" >"'
 		<vbox>
 			<frame>
 				<frame Midi directory>
@@ -4861,8 +5006,8 @@ export GSW_DIR_DIALOG="
 				</frame>
 				<button ok>
 					<action type="command">echo $FILE_DIRECTORY</action>
-					<action type="command">echo ${extensions}</action>
-					<action type="command">cd "$FILE_DIRECTORY" ; if [ -f "${database}" ] ; then mv "${database}" "${database}_OLD" ; fi ; echo "" 1> "${database}" ; for ext in ${extensions} ; do xterm -e "export supermode=dialog ; source easybashgui ; wait_for Searching${ext}... ; find ./ -type f | fgrep -i ${ext} 1>> "${database}_TEMP" ; sleep 1 ; terminate_wait_for; clean_temp" ; done ; cat "${database}_TEMP" | sed s\#'^./'#"$(pwd)/"# | sort 1> "${database}" ; rm "${database}_TEMP"</action>
+					<action type="command">echo ${extensions}</action>					
+					<action type="command">bash -c "export supertitle=\"Bash!Karaoke\" ; source ${bk_COMMON}; crea_database \"$FILE_DIRECTORY\" ; clean_temp"</action>
 					<action type="closewindow">GSW_DIR_DIALOG</action>
 				</button>
 			</frame>
@@ -4880,7 +5025,7 @@ export GSW_DIR_DIALOG="
 [ "${l}" = "IT" ] && export GSW_FILE_DIALOG_title="Bash!Karaoke: seleziona il file..."
 [ "${l}" = "EN" ] && export GSW_FILE_DIALOG_title="Bash!Karaoke: select file..."
 export GSW_FILE_DIALOG="
-	<window title=\"${GSW_FILE_DIALOG_title}\" window_position=\"1\" default_width=\"500\">"'
+	<window title=\"${GSW_FILE_DIALOG_title}\" window_position=\"1\" default_width=\"500\" icon-name=\"${window_BK_icon}\" >"'
 		<vbox>
 			<frame Midi filename>
 				<frame>
@@ -4914,8 +5059,8 @@ export GSW_FILE_DIALOG="
 						<action type="command">xplaymidi "$FILE_TO_PLAY"</action>
 					</button>
 					<button>
-						<label>timidity</label>
-						<action type="command">timidity -A 105 --volume-compensation -igt "$FILE_TO_PLAY"</action>
+						<label>${plain_timidity}</label>
+						<action type="command">${plain_timidity} -A 105 --volume-compensation -igt "$FILE_TO_PLAY"</action>
 					</button>
 					<button>
 						<input file stock="gtk-edit"></input>
@@ -5777,7 +5922,7 @@ find_file_1
 		string_to_find="$(cat "${dummy_file}" )"
 		artist_title="$(echo "${string_to_find}" | tr -c '[[:alnum:]]' '?' | sed s\#'\?'#'\.\*'#g )"
 		list="$(cat "${database}" | sed -n "\#${artist_title}#Ip" )"
-		echo "${list}" 1> "${dir_Karaoke}/lista_karaoke.txt"
+		echo "${list}" 1> "${dir_Karaoke}/${lista_karaoke}"
 		}
 find_file_2
 	#

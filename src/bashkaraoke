@@ -2,8 +2,7 @@
 #
 #########################
 #
-# Copyright (C) 2016 Vittorio Cagnetta
-# Copyright (C) 2016 Davide Depau
+# Copyright (C) 2019 Vittorio Cagnetta
 #
 # Author: Vittorio Cagnetta <vaisarger@gmail.com>
 #
@@ -192,17 +191,21 @@ exec 2> "${dir_Karaoke}/${log_file}"
 [ "${use_gsw}" = "true" ] && \
 	{
 	#
-	[ -f "${database}" ] && var_database="$(cat "${database}" )" && export database
+	#[ -f "${database}" ] && var_database="$(cat "${database}" )" && export database
+	[ -f "${database}" ] && var_database="$(gsed -n s\#'^.*path=\(.*\)\ttitle=.*$'#'\1'#p 0< "${database}" )" && export database
 	#[ -f "${database}" ] && var_database="$(gsed -n s\#'^.*path="""\(.*\)""", title=.*$'#'\1'#p 0< "${database}"  )" && export database
+	#
 	export extensions="${extensions_var}"
 	#export info_file="${dir_tmp}/${file_ignore}"
 	export info_file="${dir_Karaoke}/.info"
-		echo "" 1> "${dir_Karaoke}/lista_karaoke.txt"
+		echo "" 1> "${dir_Karaoke}/${lista_karaoke}"
 	export dummy_file="${dir_tmp}/${file_tmp}"
 		[ "${l}" = "IT" ] && echo "Artista/Canzone - es. m?dugno/nel?blu" 1> "${dummy_file}"
 		[ "${l}" = "EN" ] && echo "Artist/Song - e.g. beatl?s/com?gether" 1> "${dummy_file}"
-	: ${dir_Karaoke}/lista_karaoke.txt
-		echo "" 1> "${dir_Karaoke}/lista_karaoke.txt"
+	: ${dir_Karaoke}/${lista_karaoke}
+		echo "" 1> "${dir_Karaoke}/${lista_karaoke}"
+	#
+	###
 	#
 	export BASHKARAOKE_DIALOG="$(outputta_bkXgtkdialog )"
 	gtkdialog --program="BASHKARAOKE_DIALOG" | \
@@ -218,7 +221,7 @@ exec 2> "${dir_Karaoke}/${log_file}"
 							#
 							artist_title="$(echo "${data}" | tr -c '[[:alnum:]]' '?' | gsed s\#'\?'#'\.\*'#g )"
 							song_list="$(echo "${var_database}" | gsed -n "\#${artist_title}#Ip" )"
-							echo "${song_list}" 1> "${dir_Karaoke}/lista_karaoke.txt"
+							echo "${song_list}" 1> "${dir_Karaoke}/${lista_karaoke}"
 							#########################################
 							#
 						done
@@ -368,8 +371,12 @@ while :
 		#
 		if [ "${primo_loop}" = "SI" ]
 			then
+			#
 			primo_loop="NO"
+			#
 		else
+			#
+			# => ${primo_loop} = "NO"
 			#
 			if [ ${#lista} -eq 0 ]
 				then
@@ -384,6 +391,12 @@ while :
 				: array_lista[@]
 				: scelte
 				#
+			else
+				#
+				# ${lista} is not empty...
+				#
+				: 
+				#
 			fi
 			#
 		fi
@@ -393,6 +406,7 @@ while :
 				"$(basename "${bk}" ) ->" \
 				"$(if [ $(echo -n "$(type "pykar" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "pykar ->"; fi )" \
 				"$(if [ $(echo -n "$(type "playmidi" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "playmidi ->"; fi )" \
+				"$(if [ "${plain_timidity}" != "timidity" ]; then echo "${plain_timidity} ->"; fi )" \
 				"timidity ->" \
 				"${delimiter}" \
 				"=> estrai il testo della canzone" \
@@ -405,6 +419,7 @@ while :
 				"$(basename "${bk}" ) ->" \
 				"$(if [ $(echo -n "$(type "pykar" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "pykar ->"; fi )" \
 				"$(if [ $(echo -n "$(type "playmidi" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "playmidi ->"; fi )" \
+				"$(if [ "${plain_timidity}" != "timidity" ]; then echo "${plain_timidity} ->"; fi )" \
 				"timidity ->" \
 				"${delimiter}" \
 				"=> extract song lyric" \
@@ -460,6 +475,7 @@ while :
 				[ "${l}" = "IT" ] && alert_message "Attenzione:\npykar ha avuto un problema..."
 				[ "${l}" = "EN" ] && alert_message "Error:\npykar had a problem..."
 			fi
+			#
 		elif [ "${scelta}" = "playmidi ->" ]
 			then
 			#
@@ -475,6 +491,24 @@ while :
 			##
 			#
 			terminate_wait_for
+			#
+		elif [ "${scelta}" = "${plain_timidity} ->" ]
+			then
+			#
+			:
+			#
+			##
+			####
+			${plain_timidity} -A 105 --volume-compensation -igt \"${midi}\"
+			####
+			##
+			#
+			if [ ${?} -ne 0 ]
+				then
+				[ "${l}" = "IT" ] && alert_message "Attenzione:\n ${plain_timidity} ha avuto un problema..."
+				[ "${l}" = "EN" ] && alert_message "Error:\n ${plain_timidity} had a problem..."
+			fi
+			#
 		elif [ "${scelta}" = "timidity ->" ]
 			then
 			#
