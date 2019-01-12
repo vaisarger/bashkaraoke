@@ -322,49 +322,122 @@ export bestbrowser=palemoon
 #
 ##
 #
-if [ "${mode}" = "gtkdialog" ]
+if [ "${mode}" = "yad" ]
 	then
-	:
+	#
+	# --width=${width} --height=${height}
+	export yad_width="580"
+	export yad_height="500"
+	#
+	BK_yad_path="$(type -p yad )"
+	[ ${#BK_yad_path} -gt 0 ] && \
+	yad()
+		{
+		#
+		num_param=${#}
+		#
+		if [ "${FUNCT_NAME}" = "wait_for" ]
+			then
+			IFS=$'\t'
+			exec	${BK_yad_path}	--image	${big_BK_icon}	--window-icon	${window_BK_icon}	--width=${yad_width}	--height=${yad_height}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+										do
+										[[ ${1} = --width=* ]] && shift && continue
+										[[ ${1} = --height=* ]] && shift && continue
+										echo -en "${1}\t"
+										shift
+									done )
+		else
+			IFS=$'\t'
+			${BK_yad_path}	--image	${big_BK_icon}	--window-icon	${window_BK_icon}	--width=${yad_width}	--height=${yad_height}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+										do
+										[[ ${1} = --width=* ]] && shift && continue
+										[[ ${1} = --height=* ]] && shift && continue
+										echo -en "${1}\t"
+										shift
+									done )
+		fi
+		#
+		}
 	#
 elif [ "${mode}" = "kdialog" ]
 	then
+	BK_kdialog_path="$(type -p kdialog )"
+	[ ${#BK_kdialog_path} -gt 0 ] && \
 	kdialog()
 		{
 		num_param=${#}
-		IFS=$'\t'
-		exec	kdialog	--icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+		#
+		if [ "${FUNCT_NAME}" = "wait_for" ]
+			then
+			IFS=$'\t'
+			exec	${BK_kdialog_path}	--icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 									do
 									echo -en "${1}\t"
 									shift
 								done )
+		else
+			IFS=$'\t'
+			${BK_kdialog_path}	--icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+										do
+										echo -en "${1}\t"
+										shift
+									done )
+		fi
 		#
 		}
 	#
 elif [ "${mode}" = "zenity" ]
 	then
-	:
+	BK_zenity_path="$(type -p zenity )"
+	[ ${#BK_zenity_path} -gt 0 ] && \
 	zenity()
 		{
 		num_param=${#}
-		IFS=$'\t'
-		exec	zenity	--window-icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+		#
+		if [ "${FUNCT_NAME}" = "wait_for" ]
+			then
+			IFS=$'\t'
+			exec	${BK_zenity_path}	--window-icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 										do
 										echo -en "${1}\t"
 										shift
 									done )
+		else
+			IFS=$'\t'
+			${BK_zenity_path}	--window-icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+											do
+											echo -en "${1}\t"
+											shift
+										done )
+		fi
 		#
 		}
 	#
 elif [ "${mode}" = "Xdialog" ]
 	then
+	BK_Xdialog_path="$(type -p Xdialog )"
+	[ ${#BK_Xdialog_path} -gt 0 ] && \
 	Xdialog()
 		{
 		num_param=${#}
-		if [ "${FUNCT_NAME}" = "menu" ]
+		#
+		if [ "${FUNCT_NAME}" = "wait_for" ]
+			then
+			IFS=$'\t'
+			exec	${BK_Xdialog_path}	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+										do
+										[[ ${1} = --icon ]] && shift && continue
+										[[ ${1} = *.xpm ]] && shift && continue
+										#
+										echo -en "${1}\t"
+										shift
+									done )
+			#
+		elif [ "${FUNCT_NAME}" = "menu" ]
 			then
 			#
 			IFS=$'\t'
-			exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+			${BK_Xdialog_path}	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 										do
 										[[ ${1} = Select* ]] && echo -en " \t" && shift && continue
 										#
@@ -376,7 +449,7 @@ elif [ "${mode}" = "Xdialog" ]
 			then
 			#
 			IFS=$'\t'
-			exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+			${BK_Xdialog_path}	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 										do
 										[[ ${1} = Please* ]] && echo -en " \t" && shift && continue
 										#
@@ -388,7 +461,7 @@ elif [ "${mode}" = "Xdialog" ]
 			then
 			#
 			IFS=$'\t'
-			exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+			${BK_Xdialog_path}	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 										do
 										[[ ${1} = Select* ]] && echo -en " \t" && shift && continue
 										[[ ${1} = --icon ]] && shift && continue
@@ -400,7 +473,7 @@ elif [ "${mode}" = "Xdialog" ]
 		else
 			#
 			IFS=$'\t'
-			exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+			${BK_Xdialog_path}	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 										do
 										[[ ${1} = --icon ]] && shift && continue
 										[[ ${1} = *.xpm ]] && shift && continue
@@ -771,23 +844,25 @@ modifica_rc()
 							[ "${l}" = "IT" ] && menu \
 										"GSW (Gtkdialog Single Window, finestra singola)..." \
 										"BUC (Basta Un Click, finestra singola)..." \
-										"auto (finestra multipla)..." \
+										"yad (finestra multipla)..." \
 										"gtkdialog (finestra multipla)..." \
 										"Xdialog (finestra multipla)..." \
 										"kdialog (finestra multipla)..." \
 										"zenity (finestra multipla)..." \
 										"dialog (finestra multipla)..." \
+										"auto (finestra multipla)..." \
 										"${delimiter}" \
 										"<-TORNA INDIETRO" 
 							[ "${l}" = "EN" ] && menu \
 										"GSW (Gtkdialog Single Window, single window)..." \
 										"BUC (Basta Un Click, single window)..." \
-										"auto (multiple window)..." \
+										"yad (multiple window)..." \
 										"gtkdialog (multiple window)..." \
 										"Xdialog (multiple window)..." \
 										"kdialog (multiple window)..." \
 										"zenity (multiple window)..." \
 										"dialog (multiple window)..." \
+										"auto (multiple window)..." \
 										"${delimiter}" \
 										"<-BACK" 
 							scelta_Modo="$(0< "${dir_tmp}/${file_tmp}" )"
