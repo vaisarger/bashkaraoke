@@ -103,7 +103,7 @@ export l
 #
 ####################################
 #
-BK_VERSION_NUMBER="10.1.0"
+BK_VERSION_NUMBER="10.1.3"
 #
 : version_file
 echo "${BK_VERSION_NUMBER}" 1> "${dir_Karaoke}/${version_file}"
@@ -4977,12 +4977,14 @@ outputta_bkXgtkdialog()
 						</pixmap>
 						<text xalign="2">
 							$(
-							[ "${l}" = "IT" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} basata su Gtkdialog ${vers_gtkdialog_primo_campo}.${vers_gtkdialog_secondo_campo}.${vers_gtkdialog_terzo_campo} e EasyBashGUI v.${LIB_VERSION}
+							[ "${l}" = "IT" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} 
+basata su Gtkdialog ${vers_gtkdialog_primo_campo}.${vers_gtkdialog_secondo_campo}.${vers_gtkdialog_terzo_campo} e EasyBashGUI v.${LIB_VERSION}
 					
-Bash!Karaoke e' un programma karaoke open source, fondamentalmente un frontend di backend players (come Timidity).\"</label>" 
-							[ "${l}" = "EN" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} based on Gtkdialog ${vers_gtkdialog_primo_campo}.${vers_gtkdialog_secondo_campo}.${vers_gtkdialog_terzo_campo} and EasyBashGUI v.${LIB_VERSION}
+Bash!Karaoke e' un programma karaoke open source, fondamentalmente un frontend di un backend player (come Timidity).\"</label>" 
+							[ "${l}" = "EN" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} 
+based on Gtkdialog ${vers_gtkdialog_primo_campo}.${vers_gtkdialog_secondo_campo}.${vers_gtkdialog_terzo_campo} and EasyBashGUI v.${LIB_VERSION}
 					
-Bash!Karaoke is an open source karaoke program, basically is a frontend to backend players (like Timidity).\"</label>" 
+Bash!Karaoke is an open source karaoke program, basically is a frontend to a backend player (like Timidity).\"</label>" 
 							)
 						</text>
 					</frame>
