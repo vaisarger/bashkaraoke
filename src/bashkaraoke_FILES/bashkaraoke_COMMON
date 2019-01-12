@@ -318,7 +318,7 @@ export gsw_sing_BK_icon="$(pwd)/bashkaraoke_FILES/bashkaraoke_icon.png"
 #
 export embedded_browser_dir="$(pwd)/realtime_dialog_${EMBEDDED_BROWSER_VERSION}"
 export embedded_browser="${embedded_browser_dir}/realtime_dialog.py"
-export bestbrowser=palemoon
+export bestbrowser="palemoon"
 #
 ##
 #
@@ -485,7 +485,7 @@ elif [ "${mode}" = "Xdialog" ]
 		fi
 		}
 	#
-fi
+fi #if [ "${mode}" = "yad" ]
 #
 ##
 #
@@ -1076,48 +1076,122 @@ modifica_rc()
 									dimensione_finestra_1="${width}x${height}"
 								fi
 								#
-								if [ "${mode}" = "gtkdialog" ]
+								if [ "${mode}" = "yad" ]
 									then
-									:
+									#
+									# --width=${width} --height=${height}
+									export yad_width="580"
+									export yad_height="500"
+									#
+									BK_yad_path="$(type -p yad )"
+									[ ${#BK_yad_path} -gt 0 ] && \
+									yad()
+										{
+										#
+										num_param=${#}
+										#
+										if [ "${FUNCT_NAME}" = "wait_for" ]
+											then
+											IFS=$'\t'
+											exec	${BK_yad_path}	--image	${big_BK_icon}	--window-icon	${window_BK_icon}	--width=${yad_width}	--height=${yad_height}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+																		do
+																		[[ ${1} = --width=* ]] && shift && continue
+																		[[ ${1} = --height=* ]] && shift && continue
+																		echo -en "${1}\t"
+																		shift
+																	done )
+										else
+											IFS=$'\t'
+											${BK_yad_path}	--image	${big_BK_icon}	--window-icon	${window_BK_icon}	--width=${yad_width}	--height=${yad_height}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+																		do
+																		[[ ${1} = --width=* ]] && shift && continue
+																		[[ ${1} = --height=* ]] && shift && continue
+																		echo -en "${1}\t"
+																		shift
+																	done )
+										fi
+										#
+										}
+									#
 								elif [ "${mode}" = "kdialog" ]
 									then
+									BK_kdialog_path="$(type -p kdialog )"
+									[ ${#BK_kdialog_path} -gt 0 ] && \
 									kdialog()
 										{
 										num_param=${#}
-										IFS=$'\t'
-										exec	kdialog	--icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+										#
+										if [ "${FUNCT_NAME}" = "wait_for" ]
+											then
+											IFS=$'\t'
+											exec	${BK_kdialog_path}	--icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 																	do
 																	echo -en "${1}\t"
 																	shift
 																done )
+										else
+											IFS=$'\t'
+											${BK_kdialog_path}	--icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+																		do
+																		echo -en "${1}\t"
+																		shift
+																	done )
+										fi
 										#
 										}
 									#
 								elif [ "${mode}" = "zenity" ]
 									then
-									:
+									BK_zenity_path="$(type -p zenity )"
+									[ ${#BK_zenity_path} -gt 0 ] && \
 									zenity()
 										{
 										num_param=${#}
-										IFS=$'\t'
-										exec	zenity	--window-icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+										#
+										if [ "${FUNCT_NAME}" = "wait_for" ]
+											then
+											IFS=$'\t'
+											exec	${BK_zenity_path}	--window-icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 																		do
 																		echo -en "${1}\t"
 																		shift
 																	done )
+										else
+											IFS=$'\t'
+											${BK_zenity_path}	--window-icon	${window_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+																			do
+																			echo -en "${1}\t"
+																			shift
+																		done )
+										fi
 										#
 										}
 									#
 								elif [ "${mode}" = "Xdialog" ]
 									then
+									BK_Xdialog_path="$(type -p Xdialog )"
+									[ ${#BK_Xdialog_path} -gt 0 ] && \
 									Xdialog()
 										{
 										num_param=${#}
-										if [ "${FUNCT_NAME}" = "menu" ]
+										#
+										if [ "${FUNCT_NAME}" = "wait_for" ]
+											then
+											IFS=$'\t'
+											exec	${BK_Xdialog_path}	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+																		do
+																		[[ ${1} = --icon ]] && shift && continue
+																		[[ ${1} = *.xpm ]] && shift && continue
+																		#
+																		echo -en "${1}\t"
+																		shift
+																	done )
+											#
+										elif [ "${FUNCT_NAME}" = "menu" ]
 											then
 											#
 											IFS=$'\t'
-											exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+											${BK_Xdialog_path}	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 																		do
 																		[[ ${1} = Select* ]] && echo -en " \t" && shift && continue
 																		#
@@ -1129,7 +1203,7 @@ modifica_rc()
 											then
 											#
 											IFS=$'\t'
-											exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+											${BK_Xdialog_path}	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 																		do
 																		[[ ${1} = Please* ]] && echo -en " \t" && shift && continue
 																		#
@@ -1141,7 +1215,7 @@ modifica_rc()
 											then
 											#
 											IFS=$'\t'
-											exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+											${BK_Xdialog_path}	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${small_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 																		do
 																		[[ ${1} = Select* ]] && echo -en " \t" && shift && continue
 																		[[ ${1} = --icon ]] && shift && continue
@@ -1153,7 +1227,7 @@ modifica_rc()
 										else
 											#
 											IFS=$'\t'
-											exec	Xdialog	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
+											${BK_Xdialog_path}	--rc-file	${dir_Karaoke}/${gtkrc_file}	--icon	${big_BK_icon}	$(for (( index=1 ; index <= ${num_param} ; index++ ))
 																		do
 																		[[ ${1} = --icon ]] && shift && continue
 																		[[ ${1} = *.xpm ]] && shift && continue
@@ -1165,12 +1239,7 @@ modifica_rc()
 										fi
 										}
 									#
-								fi
-								#
-								##
-								#
-								#sleep 1
-								#terminate_wait_for
+								fi #if [ "${mode}" = "yad" ]								
 								#
 								break 1
 								#

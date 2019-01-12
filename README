@@ -30,6 +30,7 @@ Since version 5.0.0 we are working to add fullscreen feature to program. Finally
 
 
 CHANGELOG :
+- 10.1.1 -> yad mode nicer, some bug fix
 - 10.1.0 -> Hard work on gtkdialog "Single window" mode...
 - 10.0.4 -> Some minor bugfixes...
 - 10.0.3 -> Hyperkar window title like Xtermkar
@@ -226,6 +227,7 @@ Dalla versione 5.0.0 esiste la funzionalità fullscreen al programma (in svilupp
 
 
 CHANGELOG :
+- 10.1.1 -> Modo yad più bello, qualche bug fix
 - 10.1.0 -> Grosso lavoro sul modo gtkdialog "Single window"...
 - 10.0.4 -> Piccoli bug fix...
 - 10.0.3 -> Titolo finestra di Hyperkar come Xtermkar

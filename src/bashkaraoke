@@ -191,12 +191,10 @@ exec 2> "${dir_Karaoke}/${log_file}"
 [ "${use_gsw}" = "true" ] && \
 	{
 	#
-	#[ -f "${database}" ] && var_database="$(cat "${database}" )" && export database
 	[ -f "${database}" ] && var_database="$(gsed -n s\#'^.*path=\(.*\)\ttitle=.*$'#'\1'#p 0< "${database}" )" && export database
-	#[ -f "${database}" ] && var_database="$(gsed -n s\#'^.*path="""\(.*\)""", title=.*$'#'\1'#p 0< "${database}"  )" && export database
 	#
 	export extensions="${extensions_var}"
-	#export info_file="${dir_tmp}/${file_ignore}"
+	#
 	export info_file="${dir_Karaoke}/.info"
 		echo "" 1> "${dir_Karaoke}/${lista_karaoke}"
 	export dummy_file="${dir_tmp}/${file_tmp}"
@@ -251,10 +249,8 @@ exec 2> "${dir_Karaoke}/${log_file}"
 # ...database
 if [ -f "${database}" ]
 	then
-	#var_database="$(cat "${database}" )" ; sleep 1
-	#var_database="$(gsed -n s\#'^.*path="""\(.*\)""", title=.*$'#'\1'#p 0< "${database}" )" ; sleep 1
+	#
 	var_database="$(gsed -n s\#'^.*path=\(.*\)\ttitle=.*$'#'\1'#p 0< "${database}" )"
-	#sleep 1
 	#
 	xscreensaver-command -exit
 	#
@@ -313,6 +309,7 @@ while :
 			#
 		elif [ "${scelta}" = "SELEZIONA il midi direttamente nel filesystem..." -o "${scelta}" = "SELECT midi directly in filesystem..." ]
 			then
+			#
 			fselect ; midi="$(0< "${dir_tmp}/${file_tmp}" )" ; clean_temp ; [ ${#midi} -eq 0 ] && continue 1
 			: midi
 			#
@@ -325,6 +322,7 @@ while :
 			#
 		elif [ "${scelta}" = "CONFIGURA $(basename "${0}" )..." -o "${scelta}" = "CONFIGURE $(basename "${0}" )..." ]
 			then
+			#
 			modifica_rc
 			: soundfont_string
 			#
@@ -339,8 +337,8 @@ while :
 		elif [ "${scelta}" = "INFORMAZIONI..." -o "${scelta}" = "ABOUT..." ]
 			then
 			#
-			[ "${l}" = "IT" ] && ok_message "$(basename "${0}" ) v.${BK_VERSION_NUMBER} \n\n Un programma karaoke \n aperto e gratuito \n basato su \n Timidity \n e \n ${LIB_NAME}/Python \n\n\n\n Autori: \n Vittorio Cagnetta (la parte in Bash di Bashkaraoke ;-)  ) \n Davide Depau (visualizzatore HTML in Python) \n Stephen Smally (pacchettizzazione)"
-			[ "${l}" = "EN" ] && ok_message "$(basename "${0}" ) v.${BK_VERSION_NUMBER} \n\n A free karaoke player \n based on \n Timidity \n and \n ${LIB_NAME}/Python \n\n\n\n Authors: \n Vittorio Cagnetta (Bash part of Bashkaraoke ;-)  ) \n Davide Depau (Python embedded HTML browser) \n Stephen Smally (packaging)"
+			[ "${l}" = "IT" ] && ok_message "$(basename "${0}" ) v.${BK_VERSION_NUMBER} \n\n Un programma karaoke \n aperto e gratuito \n basato su \n Timidity \n e \n ${LIB_NAME} \n\n\n\n Autori: \n Vittorio Cagnetta (la parte in Bash di Bashkaraoke ;-)  ) \n Davide Depau (visualizzatore HTML in Python)"
+			[ "${l}" = "EN" ] && ok_message "$(basename "${0}" ) v.${BK_VERSION_NUMBER} \n\n A free karaoke player \n based on \n Timidity \n and \n ${LIB_NAME} \n\n\n\n Authors: \n Vittorio Cagnetta (Bash part of Bashkaraoke ;-)  ) \n Davide Depau (Python embedded HTML browser)"
 			continue 1
 			#
 		elif [ "${scelta}" = "ESCI->" -o "${scelta}" = "EXIT->" ]
@@ -380,8 +378,10 @@ while :
 			#
 			if [ ${#lista} -eq 0 ]
 				then
+				#
 				[ "${l}" = "IT" ] && wait_for "Creazione della lista \n in corso..."
 				[ "${l}" = "EN" ] && wait_for "List creating..."
+				#
 				lista="$(0< "${dir_Karaoke}/${lista_karaoke}" )"
 				IFS=$'\n' ; array_lista=( ${lista} ) ; IFS=$' \t\n'	
 				scelte="$(for (( index=0 ; index < ${#array_lista[@]} ; index++ )); do echo -ne "\"$(echo "${array_lista[${index}]}" | tr -c '[a-z][A-Z][:digit:][:punct:][:blank:][:space:]' '?' )\"\t" ; done )"
@@ -472,8 +472,8 @@ while :
 			#
 			if [ ${?} -ne 0 ]
 				then
-				[ "${l}" = "IT" ] && alert_message "Attenzione:\npykar ha avuto un problema..."
-				[ "${l}" = "EN" ] && alert_message "Error:\npykar had a problem..."
+				[ "${l}" = "IT" ] && alert_message "Attenzione: \n pykar ha avuto un problema..."
+				[ "${l}" = "EN" ] && alert_message "Error: \n pykar had a problem..."
 			fi
 			#
 		elif [ "${scelta}" = "playmidi ->" ]
@@ -481,7 +481,6 @@ while :
 			#
 			[ "${l}" = "IT" ] && wait_for "Esecuzione di \n $(basename "${midi}" ) \n in corso..."
 			[ "${l}" = "EN" ] && wait_for "Playing \n $(basename "${midi}" ) \n..."
-			sleep 1
 			#
 			##
 			####
@@ -517,11 +516,14 @@ while :
 			##
 			####
 			eval timidity ${soundfont_string} -A 105 --volume-compensation -iat \"${midi}\"
+			####
+			##
+			#
 			if [ ${?} -eq 1 ]
 				then
+				#
 				[ "${l}" = "IT" ] && wait_for "Esecuzione di \n $(basename "${midi}" ) \n in corso..."
 				[ "${l}" = "EN" ] && wait_for "Playing \n $(basename "${midi}" ) \n..."
-				sleep 1
 				#
 				##
 				####
@@ -555,8 +557,10 @@ while :
 			#
 			[ "${l}" = "IT" ] && wait_for "Attendere prego..."
 			[ "${l}" = "EN" ] && wait_for "Please wait..."
+			#
 			info_midi="$("${bk_OUT}" -i "${midi}" 2> /dev/null )"
 			terminate_wait_for
+			#
 			ok_message "${info_midi}"
 			#
 			continue 1

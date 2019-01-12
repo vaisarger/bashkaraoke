@@ -26,7 +26,7 @@
 [ -z "${DESTDIR}" ] && DESTDIR=$1
 #the script should work fine even if DESTDIR is not set
 
-BK_VERSION_NUMBER="10.1.0"
+BK_VERSION_NUMBER="10.1.1"
 
 export system_bk_dir="${DESTDIR}/usr/share/bashkaraoke"
 export path_dir="${DESTDIR}/usr/bin"
