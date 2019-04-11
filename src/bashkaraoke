@@ -205,6 +205,193 @@ exec 2> "${dir_Karaoke}/${log_file}"
 	#
 	###
 	#
+	if [ ${#midi} -gt 0 ]
+		then
+		while :
+			do
+			#
+			[ "${l}" = "IT" ] && menu \
+					"$(basename "${hk}" ) ->" \
+					"$(basename "${bk}" ) ->" \
+					"$(if [ $(echo -n "$(type "pykar" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "pykar ->"; fi )" \
+					"$(if [ $(echo -n "$(type "playmidi" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "playmidi ->"; fi )" \
+					"$(if [ "${plain_timidity}" != "timidity" ]; then echo "${plain_timidity} ->"; fi )" \
+					"timidity ->" \
+					"${delimiter}" \
+					"=> estrai il testo della canzone" \
+					"=> estrai le informazioni del midi" \
+					"${delimiter}" \
+					"<-MENU PRINCIPALE"
+			[ "${l}" = "EN" ] && menu \
+					"$(basename "${hk}" ) ->" \
+					"$(basename "${bk}" ) ->" \
+					"$(if [ $(echo -n "$(type "pykar" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "pykar ->"; fi )" \
+					"$(if [ $(echo -n "$(type "playmidi" 2>/dev/null)" | wc -c) -gt 0 ]; then echo "playmidi ->"; fi )" \
+					"$(if [ "${plain_timidity}" != "timidity" ]; then echo "${plain_timidity} ->"; fi )" \
+					"timidity ->" \
+					"${delimiter}" \
+					"=> extract song lyric" \
+					"=> extract midi info" \
+					"${delimiter}" \
+					"<-MAIN MENU"
+			scelta="$(0< "${dir_tmp}/${file_tmp}" )" ; clean_temp ; if_arg_is_an_empty_variable_then_exit "scelta"
+			#
+			#############
+			# Playing...
+			#
+			midi="$(echo "${midi}" | gsed s\#"^~"#"${HOME}"# )"
+			#
+			if [ "${scelta}" = "$(basename "${bk}" ) ->" ]
+				then
+				#
+				:
+				#
+				##
+				####
+				"${bk}" "${midi}"
+				####
+				##
+				#
+			elif [ "${scelta}" = "$(basename "${hk}" ) ->" ]
+				then
+				#
+				:
+				#
+				##
+				####
+				"${hk}" "${midi}"
+				####
+				##
+				#
+			elif [ "${scelta}" = "pykar ->" ]
+				then
+				#
+				wait_seconds 1 &
+				pykar_height_1=199
+				pykar_height_2=324
+				#
+				##
+				####
+				pykar --width="1236" --height="${pykar_height_2}" --font-scale="2" --title="pykar: $(basename "${midi}" | \
+										iconv -f "${char_encoding}" )" "${midi}" 2>/dev/null
+				####
+				##
+				#
+				if [ ${?} -ne 0 ]
+					then
+					[ "${l}" = "IT" ] && alert_message "Attenzione: \n pykar ha avuto un problema..."
+					[ "${l}" = "EN" ] && alert_message "Error: \n pykar had a problem..."
+				fi
+				#
+			elif [ "${scelta}" = "playmidi ->" ]
+				then
+				#
+				[ "${l}" = "IT" ] && wait_for "Esecuzione di \n $(basename "${midi}" ) \n in corso..."
+				[ "${l}" = "EN" ] && wait_for "Playing \n $(basename "${midi}" ) \n..."
+				#
+				##
+				####
+				xterm -cr "${background}" -uc -title "$(basename "${0}"): $(basename "${midi}" | \
+					iconv -f "${char_encoding}" )" -bg "${background}" -fg "${foreground_2}" -fn "${font}" -geometry ${columns}x2+20+400 -e playmidi "${midi}"
+				####
+				##
+				#
+				terminate_wait_for
+				#
+			elif [ "${scelta}" = "${plain_timidity} ->" ]
+				then
+				#
+				:
+				#
+				##
+				####
+				${plain_timidity} -A 105 --volume-compensation -igt \"${midi}\"
+				####
+				##
+				#
+				if [ ${?} -ne 0 ]
+					then
+					[ "${l}" = "IT" ] && alert_message "Attenzione:\n ${plain_timidity} ha avuto un problema..."
+					[ "${l}" = "EN" ] && alert_message "Error:\n ${plain_timidity} had a problem..."
+				fi
+				#
+			elif [ "${scelta}" = "timidity ->" ]
+				then
+				#
+				:
+				#
+				##
+				####
+				eval timidity ${soundfont_string} -A 105 --volume-compensation -iat \"${midi}\"
+				####
+				##
+				#
+				if [ ${?} -eq 1 ]
+					then
+					#
+					[ "${l}" = "IT" ] && wait_for "Esecuzione di \n $(basename "${midi}" ) \n in corso..."
+					[ "${l}" = "EN" ] && wait_for "Playing \n $(basename "${midi}" ) \n..."
+					#
+					##
+					####
+					xterm -cr "${background}" -uc -title "$(basename "${0}"): $(basename "${midi}" | iconv -f "${char_encoding}" )" -bg "${background}" -fg "${foreground_2}" -fn "${font}" -geometry ${columns}x2+20+400 -e timidity -idt "${midi}"
+					####
+					##
+					#
+					terminate_wait_for
+				fi
+				####
+				##
+				#
+			elif [ "${scelta}" = "${delimiter}" ]
+				then
+				#
+				:
+				#
+			elif [ "${scelta}" = "=> estrai il testo della canzone" -o "${scelta}" = "=> extract song lyric" ]
+				then
+				#
+				##
+				####
+				extract_song_lyric "${midi}"
+				####
+				##
+				#
+			elif [ "${scelta}" = "=> estrai le informazioni del midi" -o "${scelta}" = "=> extract midi info" ]
+				then
+				#
+				[ "${l}" = "IT" ] && wait_for "Attendere prego..."
+				[ "${l}" = "EN" ] && wait_for "Please wait..."
+				#
+				info_midi="$("${bk_OUT}" -i "${midi}" 2> /dev/null )"
+				terminate_wait_for
+				#
+				ok_message "${info_midi}"
+				#
+			elif [ "${scelta}" = "<-MENU PRINCIPALE" -o "${scelta}" = "<-MAIN MENU" ]
+				then
+				#
+				unset midi
+				break
+				#
+			else
+				#
+				ciao
+				#
+			fi
+			#
+			##
+			#
+			continue
+			#
+			##
+			#
+		done
+		#
+	fi
+	#
+	###
+	#
 	export BASHKARAOKE_DIALOG="$(outputta_bkXgtkdialog )"
 	gtkdialog --program="BASHKARAOKE_DIALOG" | \
 						while read row
@@ -465,7 +652,7 @@ while :
 			#
 			##
 			####
-			pykar --width="1236" --height="${pykar_height_1}" --font-scale="3" --title="pykar: $(basename "${midi}" | \
+			pykar --width="1236" --height="${pykar_height_2}" --font-scale="2" --title="pykar: $(basename "${midi}" | \
 									iconv -f "${char_encoding}" )" "${midi}" 2>/dev/null
 			####
 			##

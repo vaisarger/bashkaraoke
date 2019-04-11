@@ -5,7 +5,7 @@
 ENGLISH
 -------
 
-Bash!Karaoke version : "10.1.3"
+Bash!Karaoke version : "10.1.4"
 
 -------
 
@@ -30,6 +30,7 @@ Since version 5.0.0 we are working to add fullscreen feature to program. Finally
 
 
 CHANGELOG :
+- 10.1.4 -> Some minor bug fix especially about GSW (gtkdialog single window) mode and pykar player
 - 10.1.1/2/3 -> yad mode nicer, some bug fix
 - 10.1.0 -> Hard work on gtkdialog "Single window" mode...
 - 10.0.4 -> Some minor bugfixes...
@@ -202,7 +203,7 @@ LINKS :
 ITALIANO
 -------
 
-Versione di Bash!Karaoke : "10.1.3"
+Versione di Bash!Karaoke : "10.1.4"
 
 -------
 
@@ -227,6 +228,7 @@ Dalla versione 5.0.0 esiste la funzionalità fullscreen al programma (in svilupp
 
 
 CHANGELOG :
+- 10.1.4 -> Qualche bug fix sopratutto nel modo GSW (gtkdialog single window) ed il player pykar
 - 10.1.1/2/3 -> Modo yad più bello, qualche bug fix
 - 10.1.0 -> Grosso lavoro sul modo gtkdialog "Single window"...
 - 10.0.4 -> Piccoli bug fix...

@@ -103,7 +103,7 @@ export l
 #
 ####################################
 #
-BK_VERSION_NUMBER="10.1.3"
+BK_VERSION_NUMBER="10.1.4"
 #
 : version_file
 echo "${BK_VERSION_NUMBER}" 1> "${dir_Karaoke}/${version_file}"
@@ -161,8 +161,8 @@ default_font_family="Ubuntu 50"
 ##
 #
 min_Volume="0"
-default_Volume="100"
-max_Volume="800"
+default_Volume="50"
+max_Volume="400" #It should be 800, but it's not realistic because of distortion...
 #
 min_Pitch="-24"
 default_Pitch="0"
@@ -3124,7 +3124,7 @@ go_bk()
 				click=${?} ; echo -e "\n\n\n${click}" )"
 				#
 				#[ "${l}" = "EN" ] && nudewindow="$(Xdialog --stdout ${rc} --ok-label "Restart song" --cancel-label "Quit" --title "$(basename "${0}")" ${icona_BK} --yesno "Playing\n$(basename "${midi}" )" "${dimensione_finestra_1}" "${dimensione_finestra_2}" ; click=${?} ; echo -e "\n\n\n${click}" )"
-				[ "${l}" = "IT" ] && nudewindow="$(question "Playing \n $(basename "${midi}" ) \n ... \n\n\n Restart \n song ?" ; \
+				[ "${l}" = "EN" ] && nudewindow="$(question "Playing \n $(basename "${midi}" ) \n ... \n\n\n Restart \n song ?" ; \
 				click=${?} ; echo -e "\n\n\n${click}" )"
 				#
 				click="$(echo "${nudewindow}" | tail -n 1 )"
@@ -3175,6 +3175,40 @@ go_bk()
 	###########
 	#
 	}
+#
+#
+#
+xplaymidi_bin="$(type -p 'xplaymidi' )"
+if [ ${#xplaymidi_bin} -eq 0 ]
+	then
+	#
+	xplaymidi()
+		{
+		[ "${l}" = "IT" ] && alert_message "Mi dispiace, \"xplaymidi\" non c'è tra le tue applicazioni..."
+		[ "${l}" = "EN" ] && alert_message "Sorry, \"xplaymidi\" is not in your system..."
+		}
+	#
+	export -f "xplaymidi"
+	#
+fi
+unset xplaymidi_bin
+#
+#
+#
+pykar_bin="$(type -p 'pykar' )"
+if [ ${#pykar_bin} -eq 0 ]
+	then
+	#
+	pykar()
+		{
+		[ "${l}" = "IT" ] && alert_message "Mi dispiace, \"pykar\" non c'è tra le tue applicazioni..."
+		[ "${l}" = "EN" ] && alert_message "Sorry, \"pykar\" is not in your system..."
+		}
+	#
+	export -f "pykar"
+	#
+fi
+unset pykar_bin
 #
 #
 #
@@ -3933,7 +3967,7 @@ BLOCCO_bkXbuc_2
 				midi="$(echo "${midi}" | sed s\#'^~'#"${HOME}"# )"
 				if [ -f "${midi}" ]
 					then
-					pykar --width="1236" --height="${pykar_height_1}" --font-scale="3" --title="pykar: $(basename "${midi}")" "${midi}" &
+					pykar --width="1236" --height="${pykar_height_2}" --font-scale="2" --title="pykar: $(basename "${midi}")" "${midi}" &
 					:
 				else
 					[ "${l}" = "IT" ] && echo "Err.: \"${midi}\" non esiste..."
@@ -4862,7 +4896,7 @@ BLOCCO_bkXbuc_3
 #
 outputta_bkXgtkdialog()
 	{
-	main_window_bkXgtkdialog_height=730
+	main_window_bkXgtkdialog_height=770
 	main_window_bkXgtkdialog_width=570
 	cat <<BLOCCO_bkXgtkdialog
 	
@@ -4980,11 +5014,15 @@ outputta_bkXgtkdialog()
 							[ "${l}" = "IT" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} 
 basata su Gtkdialog ${vers_gtkdialog_primo_campo}.${vers_gtkdialog_secondo_campo}.${vers_gtkdialog_terzo_campo} e EasyBashGUI v.${LIB_VERSION}
 					
-Bash!Karaoke e' un programma karaoke open source, fondamentalmente un frontend di un backend player (come Timidity).\"</label>" 
+Bash!Karaoke nasce come un programma karaoke, open source, fondamentalmente un frontend di un backend player (come Timidity).\"
+
+	</label>" 
 							[ "${l}" = "EN" ] && echo "<label>\"Bash!Karaoke v.${BK_VERSION_NUMBER} 
 based on Gtkdialog ${vers_gtkdialog_primo_campo}.${vers_gtkdialog_secondo_campo}.${vers_gtkdialog_terzo_campo} and EasyBashGUI v.${LIB_VERSION}
 					
-Bash!Karaoke is an open source karaoke program, basically is a frontend to a backend player (like Timidity).\"</label>" 
+Bash!Karaoke is an open source karaoke program, basically a frontend to a backend player (like Timidity).\"
+
+	</label>" 
 							)
 						</text>
 					</frame>
@@ -5058,6 +5096,9 @@ export GSW_SEARCH_DIALOG="
 #
 #
 # <action type="command">${bk_extractor} "$CHOISES" 1>${info_file} ; export info_file ; bash -c "source ${bk_COMMON}; cat \"${info_file}\" | text ; clean_temp"</action>
+# <action type="command">xplaymidi "$(echo $CHOISES)" & true</action>
+# <action type="command">pykar_height_1=199; pykar_height_2=324 ; pykar --width="1236" --height="${pykar_height_1}" --font-scale="3" --title="pykar: $(basename "$CHOISES")" "$(echo $CHOISES)" & true</action>
+#
 #
 list_window_bkXgtkdialog_height=730
 list_window_bkXgtkdialog_width=900
@@ -5074,41 +5115,41 @@ export GSW_LIST_DIALOG="
 				<hbox>
 					<button>
 						<label>'${HTML_karaoke_scriptname}'</label>
-						<action type="command">'${HTML_karaoke_scriptname}' "$CHOISES"</action>
+						<action type="command">'${HTML_karaoke_scriptname}' "$CHOISES" & true</action>
 						<action type="closewindow">GSW_SEARCH_DIALOG</action>
 						<action type="closewindow">GSW_LIST_DIALOG</action>
 					</button>
 					<button>
 						<label>'${xterm_karaoke_scriptname}'</label>
-						<action type="command">'${xterm_karaoke_scriptname}' "$CHOISES"</action>
+						<action type="command">'${xterm_karaoke_scriptname}' "$CHOISES" & true</action>
 						<action type="closewindow">GSW_SEARCH_DIALOG</action>
 						<action type="closewindow">GSW_LIST_DIALOG</action>
 					</button>
 					<button>
 						<label>pykar</label>
-						<action type="command">pykar_height_1=199; pykar_height_2=324 ; pykar --width="1236" --height="${pykar_height_1}" --font-scale="3" --title="pykar: $(basename "$CHOISES")" "$CHOISES"</action>
+						<action type="command">export pykar_height_1=199 && export pykar_height_2=324 && export CHOISES && bash -c "source ${bk_COMMON}; pykar --width=1236 --height=${pykar_height_2} --font-scale=2 --title=\"pykar: $(basename "$CHOISES")\" \"$(echo $CHOISES)\" ; clean_temp" & true</action>
 						<action type="closewindow">GSW_SEARCH_DIALOG</action>
 						<action type="closewindow">GSW_LIST_DIALOG</action>
 					</button>
 					<button>
 						<label>xplaymidi</label>
-						<action type="command">xplaymidi "$CHOISES"</action>
+						<action type="command">export CHOISES && bash -c "source ${bk_COMMON}; xplaymidi \"$(echo $CHOISES)\" ; clean_temp" & true</action>
 						<action type="closewindow">GSW_SEARCH_DIALOG</action>
 						<action type="closewindow">GSW_LIST_DIALOG</action>
 					</button>
 					<button>
 						<label>'${plain_timidity}'</label>
-						<action type="command">'${plain_timidity}' -A 105 --volume-compensation -igt "$CHOISES"</action>
+						<action type="command">'${plain_timidity}' -A 105 --volume-compensation -igt "$(echo $CHOISES)" & true</action>
 						<action type="closewindow">GSW_SEARCH_DIALOG</action>
 						<action type="closewindow">GSW_LIST_DIALOG</action>
 					</button>
 					<button>
 						<input file stock="gtk-edit"></input>
-						<action type="command">export CHOISES ; bash -c "source ${bk_COMMON}; extract_song_lyric \"${CHOISES}\" ; clean_temp"</action>
+						<action type="command">export CHOISES ; bash -c "source ${bk_COMMON}; extract_song_lyric \"$(echo $CHOISES)\" ; clean_temp"</action>
 					</button>
 					<button>
 						<input file stock="gtk-info"></input>
-						<action type="command">export CHOISES ; bash -c "source ${bk_COMMON}; message \"$(${bk_OUT} -i "${CHOISES}" )\" ; clean_temp"</action>
+						<action type="command">export CHOISES ; bash -c "source ${bk_COMMON}; message \"$(${bk_OUT} -i "$(echo $CHOISES)" )\" ; clean_temp"</action>
 					</button>
 				</hbox>
 			</frame>
@@ -5167,6 +5208,8 @@ export GSW_DIR_DIALOG="
 '
 #
 #
+# <action type="command">pykar_height_1=199; pykar_height_2=324 ; pykar --width="1236" --height="${pykar_height_1}" --font-scale="3" --title="pykar: $(basename "$FILE_TO_PLAY")" "$(echo $FILE_TO_PLAY)" & true</action>
+#
 #
 [ "${l}" = "IT" ] && export GSW_FILE_DIALOG_title="Bash!Karaoke: seleziona il file..."
 [ "${l}" = "EN" ] && export GSW_FILE_DIALOG_title="Bash!Karaoke: select file..."
@@ -5190,31 +5233,31 @@ export GSW_FILE_DIALOG="
 				<hbox>
 					<button>
 						<label>'${HTML_karaoke_scriptname}'</label>
-						<action type="command">'${HTML_karaoke_scriptname}' "$FILE_TO_PLAY"</action>
+						<action type="command">'${HTML_karaoke_scriptname}' "$FILE_TO_PLAY" & true</action>
 					</button>
 					<button>
 						<label>'${xterm_karaoke_scriptname}'</label>
-						<action type="command">'${xterm_karaoke_scriptname}' "$FILE_TO_PLAY"</action>
+						<action type="command">'${xterm_karaoke_scriptname}' "$FILE_TO_PLAY" & true</action>
 					</button>
 					<button>
 						<label>pykar</label>
-						<action type="command">pykar_height_1=199; pykar_height_2=324 ; pykar --width="1236" --height="${pykar_height_1}" --font-scale="3" --title="pykar: $(basename "$CHOISES")" "$FILE_TO_PLAY"</action>
+						<action type="command">export pykar_height_1=199 && export pykar_height_2=324 && export FILE_TO_PLAY && bash -c "source ${bk_COMMON}; pykar --width=1236 --height=${pykar_height_2} --font-scale=2 --title=\"pykar: $(basename "$FILE_TO_PLAY")\" \"$(echo $FILE_TO_PLAY)\" ; clean_temp" & true</action>
 					</button>
 					<button>
 						<label>xplaymidi</label>
-						<action type="command">xplaymidi "$FILE_TO_PLAY"</action>
+						<action type="command">export FILE_TO_PLAY && bash -c "source ${bk_COMMON}; xplaymidi \"$(echo $FILE_TO_PLAY)\" ; clean_temp" & true</action>
 					</button>
 					<button>
-						<label>${plain_timidity}</label>
-						<action type="command">${plain_timidity} -A 105 --volume-compensation -igt "$FILE_TO_PLAY"</action>
+						<label>'${plain_timidity}'</label>
+						<action type="command">${plain_timidity} -A 105 --volume-compensation -igt "$(echo $FILE_TO_PLAY)" & true</action>
 					</button>
 					<button>
 						<input file stock="gtk-edit"></input>
-						<action type="command">export FILE_TO_PLAY ; bash -c "source ${bk_COMMON}; extract_song_lyric \"${FILE_TO_PLAY}\" ; clean_temp"</action>
+						<action type="command">export FILE_TO_PLAY ; bash -c "source ${bk_COMMON}; extract_song_lyric \"$(echo $FILE_TO_PLAY)\" ; clean_temp"</action>
 					</button>
 					<button>
 						<input file stock="gtk-info"></input>
-						<action type="command">export FILE_TO_PLAY ; bash -c "source ${bk_COMMON}; message \"$(${bk_OUT} -i "${FILE_TO_PLAY}" )\" ; clean_temp"</action>
+						<action type="command">export FILE_TO_PLAY ; bash -c "source ${bk_COMMON}; message \"$(${bk_OUT} -i "$(echo $FILE_TO_PLAY)" )\" ; clean_temp"</action>
 					</button>
 				</hbox>
 			</frame>
